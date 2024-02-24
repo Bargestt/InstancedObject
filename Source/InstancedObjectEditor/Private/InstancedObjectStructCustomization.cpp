@@ -20,7 +20,8 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 	ObjectHandle = PropertyHandle->GetChildHandle("Object", false);	
 	ObjectHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FInstancedObjectStructCustomization::UpdateTitle));
 	ObjectHandle->SetOnChildPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FInstancedObjectStructCustomization::UpdateTitle));
-
+	
+	
 	TSharedPtr<SWidget> HeaderWidget;
 	if (ObjectHandle.IsValid())
 	{
@@ -36,11 +37,15 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 			return;
 		}
 
+		FObjectProperty* ObjectProp = CastField<FObjectProperty>(ObjectHandle->GetProperty());
+		UClass* MainBaseClass = ObjectProp->PropertyClass;
+
 		FString IndentMeta = StructClass->GetMetaData("IndentSize");
 		if (!IndentMeta.IsEmpty() && IndentMeta.IsNumeric())
 		{
 			IndentSize = FCString::Atoi(*IndentMeta);
 		}
+		bRemoveBrackets = StructClass->HasMetaData("RemoveBrackets");
 
 		bool bShowAdvancedWidget = StructClass->HasMetaData(TEXT("AdvancedWidget"));
 		
@@ -90,23 +95,38 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 			BaseClass = ClassName.IsEmpty() ? nullptr : UClass::TryFindTypeSlow<UClass>(ClassName);
 		}
 
+		if (BaseClass && !BaseClass->IsChildOf(MainBaseClass))
+		{
+			ensureMsgf(TEXT("FInstancedObjectStruct: BaseClass from metadata must be child of object property class. Meta: %s, Property: %s"), *GetNameSafe(BaseClass), *GetNameSafe(MainBaseClass));
+			BaseClass = MainBaseClass;
+		}
+
 		UClass* InterfaceClass;
 		{
 			FString ClassName = ExtractMetaData(TEXT("MustImplement"));		
 			InterfaceClass = ClassName.IsEmpty() ? nullptr : UClass::TryFindTypeSlow<UClass>(ClassName);
 		}
 
-		bool bShowNoneOption =	!ObjectHandle->GetProperty()->HasAllPropertyFlags(CPF_NoClear) &&
+		TSharedPtr<SWidget> ObjectEditor;
+		if (BaseClass || InterfaceClass)
+		{
+			bool bShowNoneOption =	!ObjectHandle->GetProperty()->HasAllPropertyFlags(CPF_NoClear) &&
 								!PropertyHandle->GetProperty()->HasAllPropertyFlags(CPF_NoClear) &&	
 								!(bIsInContainer && Container->GetProperty()->HasAllPropertyFlags(CPF_NoClear));
 
 
-		TSharedRef<SWidget> ObjectEditor =
-			SNew(SInstancedObjectHeader, ObjectHandle)
-			.MetaClass(BaseClass)
-			.RequiredInterface(InterfaceClass)
-			.ShowDisplayNames(true)
-			.ShowNoneOption(bShowNoneOption);
+			ObjectEditor =
+				SNew(SInstancedObjectHeader, ObjectHandle)
+				.MetaClass(BaseClass)
+				.RequiredInterface(InterfaceClass)
+				.ShowDisplayNames(true)
+				.ShowNoneOption(bShowNoneOption);
+		}
+		else
+		{
+			ObjectEditor = ObjectHandle->CreatePropertyValueWidget();
+		}
+		
 
 		if (!bShowAdvancedWidget)
 		{
@@ -126,6 +146,7 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 					{
 						if (Switcher.IsValid())
 						{
+							UpdateTooltip();
 							Switcher->SetActiveWidgetIndex(1);
 						}
 					})
@@ -144,11 +165,11 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 							SNew(SRichTextBlock)
 							.DecoratorStyleSet(&FAppStyle::Get())
 							.TextStyle(FAppStyle::Get(), "NormalText")
-							.Text(Title)	
+							.Text(this, &FInstancedObjectStructCustomization::GetTitle)	
 						]
 						+ SWidgetSwitcher::Slot()
 						[
-							ObjectEditor
+							ObjectEditor.ToSharedRef()
 						]					
 					]
 				];
@@ -203,7 +224,7 @@ TSharedRef<IToolTip> FInstancedObjectStructCustomization::CreateTooltipWidget()
 			SNew(SRichTextBlock)
 			.DecoratorStyleSet(&FAppStyle::Get())
 			.TextStyle(FAppStyle::Get(), "NormalText")
-			.Text(Tooltip)
+			.Text(this, &FInstancedObjectStructCustomization::GetTooltip)
 		]
 	];
 }
@@ -218,7 +239,7 @@ void FInstancedObjectStructCustomization::UpdateTooltip()
 	Tooltip = ReadTitle(true);
 }
 
-FText FInstancedObjectStructCustomization::ReadTitle(bool bFull)
+FText FInstancedObjectStructCustomization::ReadTitle(bool bFull) const
 {
 	UObject* ObjectValue = nullptr;
 	FPropertyAccess::Result Result = ObjectHandle->GetValue(ObjectValue);
@@ -242,7 +263,7 @@ FText FInstancedObjectStructCustomization::ReadTitle(bool bFull)
 	if (bFull && IndentSize >= 0 && !bNoIndent)
 	{
 		FString IndentedString;
-		int32 Error = ParseIndent(String, IndentedString, IndentSize);
+		int32 Error = ParseIndent(String, IndentedString);
 		if (Error > 0)
 		{
 			IndentedString += FString::Printf(TEXT("\nmissing %d brackets"), Error);
@@ -256,13 +277,19 @@ FText FInstancedObjectStructCustomization::ReadTitle(bool bFull)
 	return FText::FromString(String);		
 }
 
-int32 FInstancedObjectStructCustomization::ParseIndent(FString InString, FString& OutString, int32 IndentSize)
+int32 FInstancedObjectStructCustomization::ParseIndent(FString InString, FString& OutString) const
 {
 	int32 Depth = 0;
 	bool bDepthChanged = false;
 	for (int32 Index = 0; Index < InString.Len(); Index++)
 	{
-		if (InString[Index] == '(')
+		if (InString[Index] == '\n')
+		{
+			bDepthChanged = true;
+//			OutString += InString[Index];
+//			OutString += FString::ChrN(FMath::Max(0, Depth * IndentSize), ' ');
+		}
+		else if (InString[Index] == '(')
 		{
 			Depth++;
 			bDepthChanged = true;
@@ -278,8 +305,8 @@ int32 FInstancedObjectStructCustomization::ParseIndent(FString InString, FString
 			{
 				OutString += TEXT("\n") + FString::ChrN(FMath::Max(0, Depth * IndentSize), ' ');
 			}
-			OutString += InString[Index];
-			bDepthChanged = false;
+			OutString += InString[Index];			
+			bDepthChanged = false;	
 		}
 	}
 	OutString.RemoveFromStart(TEXT("\n"));

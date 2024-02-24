@@ -7,7 +7,7 @@ public class InstancedObjectEditor : ModuleRules
     public InstancedObjectEditor(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-
+        OptimizeCode = CodeOptimization.Never;
         PublicDependencyModuleNames.AddRange(
             new string[]
             {

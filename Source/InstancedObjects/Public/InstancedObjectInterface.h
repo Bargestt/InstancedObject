@@ -35,4 +35,6 @@ public:
 
 public:
 	static FString GetTitleSafe(UObject* Object, bool bFullTitle);
+	/* Object must implement interface or be null*/
+	static FString GetTitleChecked(UObject* Object, bool bFullTitle);
 };

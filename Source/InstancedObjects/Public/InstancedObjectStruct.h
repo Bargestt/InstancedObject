@@ -14,7 +14,8 @@
  *
  * Add metadata to USTRUCT declaration to configure filtering
  *	BaseClass, MustImplement
- *	 - Can be overriden by owning Container or Property row
+ *	 - Selects first from: Container, StructProperty, ObjectProperty, StructClassDeclaration
+ *	 - Adding filtering will switch to custom EditInlineNew editor, it has limited functionality
  *	
  * 
  *  AdvancedWidget - Display with fancy widget
@@ -24,40 +25,25 @@
  *  - Uses FAppStyle to decorate text
  */
 USTRUCT(meta=(Hidden))
-struct INSTANCEDOBJECTS_API FInstancedObjectBase
+struct INSTANCEDOBJECTS_API FInstancedObjectStructBase
 {
 	GENERATED_BODY();
 public:
+	virtual ~FInstancedObjectStructBase()
+	{
+		
+	}	
 	virtual UObject* Get() const
 	{
 		return nullptr;
-	}
-	
+	}	
 	virtual bool IsValid() const 
 	{ 
 		return Get() != nullptr;
 	}	
-
 	virtual UClass* GetClass() const
 	{
 		const UObject* Obj = Get();
 		return Obj ? Obj->GetClass() : nullptr;
 	}
-};
-
-
-/*
- * Instanced object with custom display Title and Tooltip
- *
- * Can filter selection using BaseClass meta data(USTRUCT or UPROPERTY)
- */
-USTRUCT(BlueprintType, meta=(AdvancedWidget, IndentSize=4))
-struct INSTANCEDOBJECTS_API FInstancedObject : public FInstancedObjectBase
-{
-	GENERATED_BODY();
-public:
-	UPROPERTY(EditAnywhere, Instanced, Category="Object", meta=(MustImplement="InstancedObjectInterface"))
-	TObjectPtr<UObject> Object;
-
-	virtual UObject* Get() const override { return Object; }
 };

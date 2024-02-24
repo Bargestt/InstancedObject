@@ -2,7 +2,7 @@
 
 
 #include "InstancedObjectInterface.h"
-
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InstancedObjectInterface)
 
 FString IInstancedObjectInterface::GetTitleSafe(UObject* Object, bool bFullTitle)
 {
@@ -16,6 +16,16 @@ FString IInstancedObjectInterface::GetTitleSafe(UObject* Object, bool bFullTitle
 		return TEXT("Must implement UInstancedObjectInterface: ") + Object->GetName();
 	}
 		
+	return GetTitleChecked(Object, bFullTitle);
+}
+
+FString IInstancedObjectInterface::GetTitleChecked(UObject* Object, bool bFullTitle)
+{
+	if (!Object)
+	{
+		return TEXT("None");
+	}
+	
 	FString Title = IInstancedObjectInterface::Execute_GetInstancedObjectTitle(Object, bFullTitle);
 	if (Title.IsEmpty())
 	{
@@ -26,7 +36,7 @@ FString IInstancedObjectInterface::GetTitleSafe(UObject* Object, bool bFullTitle
 			Title = Object->GetClass()->GetName();
 		}
 #else
-			Title = Object->GetClass()->GetName();
+		Title = Object->GetClass()->GetName();
 #endif
 	}
 

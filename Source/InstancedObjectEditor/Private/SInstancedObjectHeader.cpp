@@ -6,7 +6,7 @@
 #include "ClassViewerModule.h"
 #include "Styling/SlateIconFinder.h"
 
-UE_DISABLE_OPTIMIZATION
+
 #define LOCTEXT_NAMESPACE "FInstancedObjectEditorModule"
 
 void SInstancedObjectHeader::Construct(const FArguments& InArgs, TSharedPtr<IPropertyHandle> InPropertyHandle)
@@ -372,5 +372,5 @@ PRAGMA_ENABLE_DEPRECATION_WARNINGS
 	return TEXT("None");
 }
 
-UE_ENABLE_OPTIMIZATION
+
 #undef LOCTEXT_NAMESPACE

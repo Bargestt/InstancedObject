@@ -26,15 +26,18 @@ private:
 	TSharedRef<IToolTip> CreateTooltipWidget();
 	void UpdateTitle();
 	void UpdateTooltip();	
-	FText ReadTitle(bool bFull);	
+	FText ReadTitle(bool bFull) const;	
 
-	static int32 ParseIndent(FString InString, FString& OutString, int32 IndentSize);
+	int32 ParseIndent(FString InString, FString& OutString) const;
 
 	
 private:
 	TSharedPtr<IPropertyHandle> ObjectHandle;
 	TSharedPtr<SWidgetSwitcher> Switcher;
+	bool bRemoveBrackets;
 	int32 IndentSize = 4;
-	FText Title;	
+	FText Title;
+	FText GetTitle() const { return Title; }
 	FText Tooltip;
+	FText GetTooltip() const { return Tooltip; }
 };

@@ -19,7 +19,7 @@ public:
 		for (TObjectIterator<UScriptStruct> It; It; ++It)
 		{
 			UScriptStruct* Struct  = *It;
-			if (!Struct->HasMetaData(TEXT("Hidden")) && Struct->IsChildOf(FInstancedObjectBase::StaticStruct()))
+			if (!Struct->HasMetaData(TEXT("Hidden")) && Struct->IsChildOf(FInstancedObjectStructBase::StaticStruct()))
 			{
 				FName StructName = Struct->GetFName();
 				RegisteredStructs.Add(StructName);
