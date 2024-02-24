@@ -9,7 +9,7 @@ UObject* FInstancedConditionStruct::Get() const
 	return Object;
 }
 
-bool FInstancedConditionStruct::CheckCondition(const FConditionContext& Context, bool bDefaultValue) const
+bool FInstancedConditionStruct::CheckCondition(const FInstancedConditionContext& Context, bool bDefaultValue) const
 {
 	return Object ? Object->Check(Context) : bDefaultValue;
 }
@@ -21,13 +21,13 @@ UWorld* UInstancedCondition::GetWorld() const
 	return World ? World : nullptr;
 }
 
-bool UInstancedCondition::Check(const FConditionContext& Context)
+bool UInstancedCondition::Check(const FInstancedConditionContext& Context)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(UInstancedCondition::Check);
 	bool bResult = false;
 	
 	World = GEngine->GetWorldFromContextObject(Context.WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
-	bResult = CheckCondition(Context) ^ (CanInvert() && bInvert);
+	bResult = CheckCondition(Context) ^ (bCanInvert && bInvert);
 	World = nullptr;
 	
 	return bResult;
@@ -42,11 +42,11 @@ bool UInstancedConditionBlueprintLibrary::IsInstancedConditionValid(const FInsta
 	return Condition.IsValid();
 }
 
-bool UInstancedConditionBlueprintLibrary::CheckInstancedCondition(UObject* WorldContextObject, const FInstancedConditionStruct& Condition, const FConditionContext& Context)
+bool UInstancedConditionBlueprintLibrary::CheckInstancedCondition(UObject* WorldContextObject, const FInstancedConditionStruct& Condition, const FInstancedConditionContext& Context)
 {
 	if (Context.WorldContextObject == nullptr)
 	{
-		FConditionContext NewContext = Context;
+		FInstancedConditionContext NewContext = Context;
 		NewContext.WorldContextObject = WorldContextObject;
 		return Condition.CheckCondition(NewContext);
 	}
@@ -59,7 +59,13 @@ bool UInstancedConditionBlueprintLibrary::CheckInstancedCondition(UObject* World
 	 Default boolean operators
  *--------------------------------------------*/
 
-bool UInstancedCondition_Bool::CheckCondition_Implementation(const FConditionContext& Context)
+UInstancedCondition_Bool::UInstancedCondition_Bool()
+	: Super()
+{
+	bCanInvert = false;
+}
+
+bool UInstancedCondition_Bool::CheckCondition_Implementation(const FInstancedConditionContext& Context)
 {
 	return bBool;
 }
@@ -70,7 +76,7 @@ FString UInstancedCondition_Bool::GetInstancedObjectTitle_Implementation(bool bF
 }
 
 
-bool UInstancedCondition_LogicOperator::CheckCondition_Implementation(const FConditionContext& Context)
+bool UInstancedCondition_LogicOperator::CheckCondition_Implementation(const FInstancedConditionContext& Context)
 {
 	switch (Type)
 	{

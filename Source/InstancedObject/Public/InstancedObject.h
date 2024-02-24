@@ -15,7 +15,7 @@
  * Can filter selection using BaseClass meta data(USTRUCT or UPROPERTY)
  */
 USTRUCT(BlueprintType, meta=(AdvancedWidget, IndentSize=4))
-struct INSTANCEDOBJECTS_API FInstancedObjectStruct : public FInstancedObjectStructBase
+struct INSTANCEDOBJECT_API FInstancedObjectStruct : public FInstancedObjectStructBase
 {
 	GENERATED_BODY();
 public:
@@ -28,20 +28,20 @@ public:
 
 
 UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, HideCategories=(Hidden))
-class INSTANCEDOBJECTS_API UInstancedObject : public UObject, public IInstancedObjectInterface
+class INSTANCEDOBJECT_API UInstancedObject : public UObject, public IInstancedObjectInterface
 {
 	GENERATED_BODY()
 };
 
 UCLASS(Abstract, CollapseCategories)
-class INSTANCEDOBJECTS_API UInstancedObject_NoCategories : public UInstancedObject
+class INSTANCEDOBJECT_API UInstancedObject_NoCategories : public UInstancedObject
 {
 	GENERATED_BODY()
 };
 
 
 UCLASS()
-class INSTANCEDOBJECTS_API UInstancedObjectBlueprintLibrary : public UBlueprintFunctionLibrary
+class INSTANCEDOBJECT_API UInstancedObjectBlueprintLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:

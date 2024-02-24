@@ -13,11 +13,11 @@ class UInstancedCondition;
 
 
 USTRUCT(BlueprintType)
-struct INSTANCEDOBJECTS_API FConditionContext
+struct INSTANCEDOBJECT_API FInstancedConditionContext
 {
 	GENERATED_BODY()
 public:
-	virtual ~FConditionContext()
+	virtual ~FInstancedConditionContext()
 	{	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition")
@@ -30,7 +30,7 @@ public:
  * Can filter selection using BaseClass meta data(USTRUCT or UPROPERTY)
  */
 USTRUCT(BlueprintType, meta=(AdvancedWidget, IndentSize=4))
-struct INSTANCEDOBJECTS_API FInstancedConditionStruct : public FInstancedObjectStructBase
+struct INSTANCEDOBJECT_API FInstancedConditionStruct : public FInstancedObjectStructBase
 {
 	GENERATED_BODY();
 public:
@@ -40,7 +40,7 @@ public:
 	virtual UObject* Get() const override;
 
 	/* Returns DefaultValue if condition is invalid */
-	bool CheckCondition(const FConditionContext& Context, bool bDefaultValue = true) const;
+	bool CheckCondition(const FInstancedConditionContext& Context, bool bDefaultValue = true) const;
 };
 
 
@@ -48,26 +48,29 @@ public:
  * 
  */
 UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, HideCategories=(Hidden), CollapseCategories)
-class INSTANCEDOBJECTS_API UInstancedCondition : public UObject, public IInstancedObjectInterface
+class INSTANCEDOBJECT_API UInstancedCondition : public UObject, public IInstancedObjectInterface
 {
 	GENERATED_BODY()
 	
 	TObjectPtr<UWorld> World;
 	
-protected:	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition", meta=(DisplayPriority=-100, EditCondition="CanInvert", EditConditionHides))
+protected:
+	UPROPERTY(EditDefaultsOnly, Category="Condition", meta=(DisplayPriority=-100))
+	bool bCanInvert;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition", meta=(DisplayPriority=-100, EditCondition="bCanInvert", EditConditionHides))
 	bool bInvert;
 	
 public:
 	virtual UWorld* GetWorld() const override;
 
 	UFUNCTION(BlueprintCallable, Category = "InstancedCondition")
-	bool Check(const FConditionContext& Context);
+	bool Check(const FInstancedConditionContext& Context);
 
 protected:	
 	UFUNCTION(BlueprintNativeEvent)
-	bool CheckCondition(const FConditionContext& Context);
-	virtual bool CheckCondition_Implementation(const FConditionContext& Context)
+	bool CheckCondition(const FInstancedConditionContext& Context);
+	virtual bool CheckCondition_Implementation(const FInstancedConditionContext& Context)
 	{
 		return false;
 	}
@@ -77,15 +80,11 @@ protected:
 	{
 		return FString(TEXT("<RichTextBlock.Bold>")) + String + TEXT("</>");
 	}
-
-	UFUNCTION()
-	virtual bool CanInvert() const { return true; }
-	
 };
 
 
 UCLASS()
-class INSTANCEDOBJECTS_API UInstancedConditionBlueprintLibrary : public UBlueprintFunctionLibrary
+class INSTANCEDOBJECT_API UInstancedConditionBlueprintLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
@@ -94,7 +93,7 @@ public:
 	static bool IsInstancedConditionValid(const FInstancedConditionStruct& Condition);
 
 	UFUNCTION(BlueprintCallable, Category = "InstancedCondition", meta=(WorldContext="WorldContextObject", AutoCreateRefTerm = "Context"))
-	static bool CheckInstancedCondition(UObject* WorldContextObject, const FInstancedConditionStruct& Condition, const FConditionContext& Context);
+	static bool CheckInstancedCondition(UObject* WorldContextObject, const FInstancedConditionStruct& Condition, const FInstancedConditionContext& Context);
 };
 
 
@@ -103,17 +102,17 @@ public:
 	 Default boolean operators
  *--------------------------------------------*/
 
-/** To meet condition all nested conditions must be met */
+/** Simple bool */
 UCLASS(NotBlueprintable, meta = (DisplayName = ".Bool"))
-class INSTANCEDOBJECTS_API UInstancedCondition_Bool : public UInstancedCondition
+class INSTANCEDOBJECT_API UInstancedCondition_Bool : public UInstancedCondition
 {
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition")
 	bool bBool = true;
 public:
-	virtual bool CanInvert() const override { return false; }
-	virtual bool CheckCondition_Implementation(const FConditionContext& Context) override;
+	UInstancedCondition_Bool();
+	virtual bool CheckCondition_Implementation(const FInstancedConditionContext& Context) override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
 };
 
@@ -132,7 +131,7 @@ enum class EConditionLogicOperatorType : uint8
 
 /** AND, OR, Equal operators */
 UCLASS(NotBlueprintable, meta = (DisplayName = ".LogicOperator"))
-class INSTANCEDOBJECTS_API UInstancedCondition_LogicOperator : public UInstancedCondition
+class INSTANCEDOBJECT_API UInstancedCondition_LogicOperator : public UInstancedCondition
 {
 	GENERATED_BODY()
 public:
@@ -142,7 +141,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition")
 	TArray<FInstancedConditionStruct> Conditions;
 
-	virtual bool CheckCondition_Implementation(const FConditionContext& Context) override;
+	virtual bool CheckCondition_Implementation(const FInstancedConditionContext& Context) override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
 };
 

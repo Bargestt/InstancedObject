@@ -123,8 +123,37 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 				.ShowNoneOption(bShowNoneOption);
 		}
 		else
-		{
+		{	
 			ObjectEditor = ObjectHandle->CreatePropertyValueWidget();
+
+			// Find all widgets in SPropertyEditorEditInline and override tooltips with better one
+			if (bShowAdvancedWidget)
+			{				
+				TArray<TSharedPtr<SWidget>> TooltipHolders;
+				TArray<TSharedPtr<SWidget>> WidgetsToCheck;
+				WidgetsToCheck.Add(ObjectEditor);
+				while (!WidgetsToCheck.IsEmpty())
+				{
+					TSharedPtr<SWidget> Widget = WidgetsToCheck.Pop();
+				
+					if (Widget->GetReadableLocation().StartsWith(TEXT("SPropertyEditorEditInline")))
+					{
+						TooltipHolders.Add(Widget);
+					}
+				
+					FChildren* AllChildren = Widget->GetChildren();
+					for (int32 Index = 0; Index < AllChildren->Num(); Index++)
+					{
+						TSharedPtr<SWidget> Child = AllChildren->GetChildAt(Index).ToSharedPtr();
+						WidgetsToCheck.Add(Child);
+					}
+				}
+
+				for (auto TooltipHolder : TooltipHolders)
+				{
+					TooltipHolder->SetToolTip(CreateTooltipWidget());
+				}
+			}	
 		}
 		
 

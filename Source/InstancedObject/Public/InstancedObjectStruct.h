@@ -25,7 +25,7 @@
  *  - Uses FAppStyle to decorate text
  */
 USTRUCT(meta=(Hidden))
-struct INSTANCEDOBJECTS_API FInstancedObjectStructBase
+struct INSTANCEDOBJECT_API FInstancedObjectStructBase
 {
 	GENERATED_BODY();
 public:

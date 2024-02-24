@@ -8,7 +8,7 @@
 
 // This class does not need to be modified.
 UINTERFACE()
-class INSTANCEDOBJECTS_API UInstancedObjectInterface : public UInterface
+class INSTANCEDOBJECT_API UInstancedObjectInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,7 +16,7 @@ class INSTANCEDOBJECTS_API UInstancedObjectInterface : public UInterface
 /**
  * 
  */
-class INSTANCEDOBJECTS_API IInstancedObjectInterface
+class INSTANCEDOBJECT_API IInstancedObjectInterface
 {
 	GENERATED_BODY()
 public:

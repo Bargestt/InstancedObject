@@ -2,12 +2,11 @@
 
 using UnrealBuildTool;
 
-public class InstancedObjects : ModuleRules
+public class InstancedObject : ModuleRules
 {
-	public InstancedObjects(ReadOnlyTargetRules Target) : base(Target)
+	public InstancedObject(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
 		
 		PublicDependencyModuleNames.AddRange(
 			new string[]

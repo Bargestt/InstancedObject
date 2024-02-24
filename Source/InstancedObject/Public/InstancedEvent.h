@@ -13,7 +13,7 @@ class UInstancedEvent;
 
 
 USTRUCT(BlueprintType)
-struct INSTANCEDOBJECTS_API FInstancedEventContext
+struct INSTANCEDOBJECT_API FInstancedEventContext
 {
 	GENERATED_BODY()
 public:
@@ -30,7 +30,7 @@ public:
  * Can filter selection using BaseClass meta data(USTRUCT or UPROPERTY)
  */
 USTRUCT(BlueprintType, meta=(AdvancedWidget, IndentSize=4))
-struct INSTANCEDOBJECTS_API FInstancedEventStruct : public FInstancedObjectStructBase
+struct INSTANCEDOBJECT_API FInstancedEventStruct : public FInstancedObjectStructBase
 {
 	GENERATED_BODY();
 public:
@@ -47,7 +47,7 @@ public:
  * 
  */
 UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, HideCategories=(Hidden), CollapseCategories)
-class INSTANCEDOBJECTS_API UInstancedEvent : public UObject, public IInstancedObjectInterface
+class INSTANCEDOBJECT_API UInstancedEvent : public UObject, public IInstancedObjectInterface
 {
 	GENERATED_BODY()
 	
@@ -69,7 +69,7 @@ protected:
 
 
 UCLASS()
-class INSTANCEDOBJECTS_API UInstancedEventBlueprintLibrary : public UBlueprintFunctionLibrary
+class INSTANCEDOBJECT_API UInstancedEventBlueprintLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
@@ -84,7 +84,7 @@ public:
 
 /** Multiple events executed in order */
 UCLASS(NotBlueprintable, meta = (DisplayName = ".Multi"))
-class INSTANCEDOBJECTS_API UInstancedEvent_Multi : public UInstancedEvent
+class INSTANCEDOBJECT_API UInstancedEvent_Multi : public UInstancedEvent
 {
 	GENERATED_BODY()
 public:	

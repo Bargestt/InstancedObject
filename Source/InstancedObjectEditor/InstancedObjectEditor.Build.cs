@@ -12,7 +12,7 @@ public class InstancedObjectEditor : ModuleRules
             new string[]
             {
                 "Core",
-                "InstancedObjects"
+                "InstancedObject"
             }
         );
 

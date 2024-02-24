@@ -77,7 +77,7 @@ FString UInstancedEvent_Multi::GetInstancedObjectTitle_Implementation(bool bFull
 	
 	if (!bFullTitle)
 	{
-		return FString::Printf(TEXT("Events: %d "), Events.Num());
+		return FString::Printf(TEXT("<RichTextBlock.Bold>Events</>: %d "), Events.Num());
 	}
 			
 	TArray<FString> Lines;
@@ -86,7 +86,7 @@ FString UInstancedEvent_Multi::GetInstancedObjectTitle_Implementation(bool bFull
 		FString Line = Events[Index].IsValid() ? *GetTitleSafe(Events[Index].Get(), bFullTitle) : *DefaultValue;
 		Lines.Add(Line);
 	}			
-	return FString::Printf(TEXT("Events(%s)"), *FString::Join(Lines, TEXT("\n")));
+	return FString::Printf(TEXT("<RichTextBlock.Bold>Events</>(%s)"), *FString::Join(Lines, TEXT("\n")));
 }
 
 

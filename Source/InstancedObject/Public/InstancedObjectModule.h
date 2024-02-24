@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FInstancedObjectsModule : public IModuleInterface
+class FInstancedObjectModule : public IModuleInterface
 {
 public:
 
