@@ -34,7 +34,7 @@ struct INSTANCEDOBJECT_API FInstancedConditionStruct : public FInstancedObjectSt
 {
 	GENERATED_BODY();
 public:
-	UPROPERTY(EditAnywhere, Instanced, Category="Object")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object")
 	TObjectPtr<UInstancedCondition> Object;
 
 	virtual UObject* Get() const override;
@@ -47,7 +47,7 @@ public:
 /**
  * 
  */
-UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, HideCategories=(Hidden), CollapseCategories)
+UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, DefaultToInstanced, HideCategories=(Hidden), CollapseCategories)
 class INSTANCEDOBJECT_API UInstancedCondition : public UObject, public IInstancedObjectInterface
 {
 	GENERATED_BODY()
@@ -90,10 +90,17 @@ class INSTANCEDOBJECT_API UInstancedConditionBlueprintLibrary : public UBlueprin
 public:
 	
 	UFUNCTION(BlueprintPure, Category = "InstancedCondition")
-	static bool IsInstancedConditionValid(const FInstancedConditionStruct& Condition);
+	static bool IsInstancedConditionValid(const FInstancedConditionStruct& Struct)
+	{
+		return IsValid(Struct.Object);
+	}
 
-	UFUNCTION(BlueprintCallable, Category = "InstancedCondition", meta=(WorldContext="WorldContextObject", AutoCreateRefTerm = "Context"))
-	static bool CheckInstancedCondition(UObject* WorldContextObject, const FInstancedConditionStruct& Condition, const FInstancedConditionContext& Context);
+	/*
+	 * @param	Context		Condition context passed to execution
+	 * @param	bDefaultValue	ReturnValue when condition is invalid
+	 */
+	UFUNCTION(BlueprintCallable, Category = "InstancedCondition", meta=(WorldContext="WorldContextObject", AutoCreateRefTerm = "Context", AdvancedDisplay=2))
+	static bool CheckInstancedCondition(UObject* WorldContextObject, const FInstancedConditionStruct& Condition, const FInstancedConditionContext& Context, bool bDefaultValue = true);
 };
 
 

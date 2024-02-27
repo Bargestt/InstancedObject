@@ -34,7 +34,7 @@ struct INSTANCEDOBJECT_API FInstancedEventStruct : public FInstancedObjectStruct
 {
 	GENERATED_BODY();
 public:
-	UPROPERTY(EditAnywhere, Instanced, Category="Object")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object")
 	TObjectPtr<UInstancedEvent> Object;
 
 	virtual UObject* Get() const override;
@@ -46,7 +46,7 @@ public:
 /**
  * 
  */
-UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, HideCategories=(Hidden), CollapseCategories)
+UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, DefaultToInstanced, HideCategories=(Hidden), CollapseCategories)
 class INSTANCEDOBJECT_API UInstancedEvent : public UObject, public IInstancedObjectInterface
 {
 	GENERATED_BODY()
@@ -75,7 +75,10 @@ class INSTANCEDOBJECT_API UInstancedEventBlueprintLibrary : public UBlueprintFun
 public:
 	
 	UFUNCTION(BlueprintPure, Category = "InstancedEvent")
-	static bool IsInstancedEventValid(const FInstancedEventStruct& Event);
+	static bool IsInstancedEventValid(const FInstancedEventStruct& Struct)
+	{
+		return IsValid(Struct.Object);
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "InstancedEvent", meta=(WorldContext="WorldContextObject", AutoCreateRefTerm = "Context"))
 	static void ExecuteInstancedEvent(UObject* WorldContextObject, const FInstancedEventStruct& Event, const FInstancedEventContext& Context);

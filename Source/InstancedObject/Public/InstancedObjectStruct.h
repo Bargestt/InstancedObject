@@ -24,7 +24,7 @@
  *  - Start text with <NoIndent> to disable indentation for this text
  *  - Uses FAppStyle to decorate text
  */
-USTRUCT(meta=(Hidden))
+USTRUCT(BlueprintType, BlueprintInternalUseOnly, meta=(Hidden))
 struct INSTANCEDOBJECT_API FInstancedObjectStructBase
 {
 	GENERATED_BODY();

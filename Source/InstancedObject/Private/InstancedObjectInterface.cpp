@@ -4,7 +4,7 @@
 #include "InstancedObjectInterface.h"
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InstancedObjectInterface)
 
-FString IInstancedObjectInterface::GetTitleSafe(UObject* Object, bool bFullTitle)
+FString IInstancedObjectInterface::GetTitleSafe(const UObject* Object, bool bFullTitle)
 {
 	if (!Object)
 	{
@@ -13,13 +13,13 @@ FString IInstancedObjectInterface::GetTitleSafe(UObject* Object, bool bFullTitle
 
 	if (!Object->Implements<UInstancedObjectInterface>())
 	{
-		return TEXT("Must implement UInstancedObjectInterface: ") + Object->GetName();
+		return TEXT("Must implement InstancedObjectInterface: ") + Object->GetName();
 	}
 		
 	return GetTitleChecked(Object, bFullTitle);
 }
 
-FString IInstancedObjectInterface::GetTitleChecked(UObject* Object, bool bFullTitle)
+FString IInstancedObjectInterface::GetTitleChecked(const UObject* Object, bool bFullTitle)
 {
 	if (!Object)
 	{

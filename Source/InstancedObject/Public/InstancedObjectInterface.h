@@ -22,8 +22,6 @@ class INSTANCEDOBJECT_API IInstancedObjectInterface
 public:
 	
 	/**
-	 * Automatically applies indent to braces ().
-	 * Start text with <NoIndent> to disable indentation for this text
 	 * Returning empty will result in falling back to Class.GetDisplayNameText then to Class.GetName
 	 */
 	UFUNCTION(BlueprintNativeEvent, Category = "Instanced Object")
@@ -34,7 +32,7 @@ public:
 	}
 
 public:
-	static FString GetTitleSafe(UObject* Object, bool bFullTitle);
+	static FString GetTitleSafe(const UObject* Object, bool bFullTitle);
 	/* Object must implement interface or be null*/
-	static FString GetTitleChecked(UObject* Object, bool bFullTitle);
+	static FString GetTitleChecked(const UObject* Object, bool bFullTitle);
 };

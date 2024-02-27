@@ -19,7 +19,7 @@ struct INSTANCEDOBJECT_API FInstancedObjectStruct : public FInstancedObjectStruc
 {
 	GENERATED_BODY();
 public:
-	UPROPERTY(EditAnywhere, Instanced, Category="Object", meta=(MustImplement="/Script/InstancedObjects.InstancedObjectInterface"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object", meta=(MustImplement="/Script/InstancedObjects.InstancedObjectInterface"))
 	TObjectPtr<UObject> Object;
 
 	virtual UObject* Get() const override { return Object; }
@@ -27,7 +27,7 @@ public:
 
 
 
-UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, HideCategories=(Hidden))
+UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, DefaultToInstanced, HideCategories=(Hidden))
 class INSTANCEDOBJECT_API UInstancedObject : public UObject, public IInstancedObjectInterface
 {
 	GENERATED_BODY()
@@ -39,16 +39,14 @@ class INSTANCEDOBJECT_API UInstancedObject_NoCategories : public UInstancedObjec
 	GENERATED_BODY()
 };
 
-
 UCLASS()
-class INSTANCEDOBJECT_API UInstancedObjectBlueprintLibrary : public UBlueprintFunctionLibrary
+class INSTANCEDOBJECT_API UInstancedObjectBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
-	
 	UFUNCTION(BlueprintPure, Category = "InstancedObject")
-	static bool IsInstancedObjectValid(const FInstancedObjectStruct& Object);
-
-	UFUNCTION(BlueprintPure, Category = "InstancedObject")
-	static FString GetInstancedObjectTitle(const FInstancedObjectStruct& Object, bool bFullTitle);
+	static bool IsInstancedObjectValid(const FInstancedObjectStruct& Struct)
+	{
+		return IsValid(Struct.Object);
+	}
 };

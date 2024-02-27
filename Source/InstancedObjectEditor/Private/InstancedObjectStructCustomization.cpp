@@ -5,6 +5,7 @@
 #include "DetailWidgetRow.h"
 #include "IDetailChildrenBuilder.h"
 #include "InstancedObjectInterface.h"
+#include "InstancedObjectUtilityLibrary.h"
 #include "PropertyCustomizationHelpers.h"
 #include "SInstancedObjectHeader.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
@@ -291,8 +292,11 @@ FText FInstancedObjectStructCustomization::ReadTitle(bool bFull) const
 	bool bNoIndent = String.RemoveFromStart(TEXT("<NoIndent>"));	
 	if (bFull && IndentSize >= 0 && !bNoIndent)
 	{
-		FString IndentedString;
-		int32 Error = ParseIndent(String, IndentedString);
+		FIndentParser Parser;
+		Parser.IndentSize = IndentSize;
+
+		int32 Error;
+		FString IndentedString = Parser.Apply(String, Error);
 		if (Error > 0)
 		{
 			IndentedString += FString::Printf(TEXT("\nmissing %d brackets"), Error);
@@ -304,42 +308,6 @@ FText FInstancedObjectStructCustomization::ReadTitle(bool bFull) const
 		String = IndentedString;
 	}		
 	return FText::FromString(String);		
-}
-
-int32 FInstancedObjectStructCustomization::ParseIndent(FString InString, FString& OutString) const
-{
-	int32 Depth = 0;
-	bool bDepthChanged = false;
-	for (int32 Index = 0; Index < InString.Len(); Index++)
-	{
-		if (InString[Index] == '\n')
-		{
-			bDepthChanged = true;
-//			OutString += InString[Index];
-//			OutString += FString::ChrN(FMath::Max(0, Depth * IndentSize), ' ');
-		}
-		else if (InString[Index] == '(')
-		{
-			Depth++;
-			bDepthChanged = true;
-		}
-		else if (InString[Index] == ')')
-		{
-			Depth--;
-			bDepthChanged = true;
-		}
-		else
-		{
-			if (bDepthChanged)
-			{
-				OutString += TEXT("\n") + FString::ChrN(FMath::Max(0, Depth * IndentSize), ' ');
-			}
-			OutString += InString[Index];			
-			bDepthChanged = false;	
-		}
-	}
-	OutString.RemoveFromStart(TEXT("\n"));
-	return Depth;
 }
 
 #undef LOCTEXT_NAMESPACE

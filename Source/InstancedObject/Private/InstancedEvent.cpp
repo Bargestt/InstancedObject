@@ -37,10 +37,6 @@ void UInstancedEvent::Execute(const FInstancedEventContext& Context)
 	UInstancedEventBlueprintLibrary
  *--------------------------------------------*/
 
-bool UInstancedEventBlueprintLibrary::IsInstancedEventValid(const FInstancedEventStruct& Event)
-{
-	return Event.IsValid();
-}
 
 void UInstancedEventBlueprintLibrary::ExecuteInstancedEvent(UObject* WorldContextObject, const FInstancedEventStruct& Event, const FInstancedEventContext& Context)
 {
@@ -86,7 +82,7 @@ FString UInstancedEvent_Multi::GetInstancedObjectTitle_Implementation(bool bFull
 		FString Line = Events[Index].IsValid() ? *GetTitleSafe(Events[Index].Get(), bFullTitle) : *DefaultValue;
 		Lines.Add(Line);
 	}			
-	return FString::Printf(TEXT("<RichTextBlock.Bold>Events</>(%s)"), *FString::Join(Lines, TEXT("\n")));
+	return FString::Printf(TEXT("<RichTextBlock.Bold>Events</>{%s}"), *FString::Join(Lines, TEXT("\n")));
 }
 
 

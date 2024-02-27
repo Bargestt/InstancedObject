@@ -37,20 +37,16 @@ bool UInstancedCondition::Check(const FInstancedConditionContext& Context)
 	UInstancedConditionBlueprintLibrary
  *--------------------------------------------*/
 
-bool UInstancedConditionBlueprintLibrary::IsInstancedConditionValid(const FInstancedConditionStruct& Condition)
-{
-	return Condition.IsValid();
-}
 
-bool UInstancedConditionBlueprintLibrary::CheckInstancedCondition(UObject* WorldContextObject, const FInstancedConditionStruct& Condition, const FInstancedConditionContext& Context)
+bool UInstancedConditionBlueprintLibrary::CheckInstancedCondition(UObject* WorldContextObject, const FInstancedConditionStruct& Condition, const FInstancedConditionContext& Context, bool bDefaultValue)
 {
 	if (Context.WorldContextObject == nullptr)
 	{
 		FInstancedConditionContext NewContext = Context;
 		NewContext.WorldContextObject = WorldContextObject;
-		return Condition.CheckCondition(NewContext);
+		return Condition.CheckCondition(NewContext, bDefaultValue);
 	}
-	return Condition.CheckCondition(Context);
+	return Condition.CheckCondition(Context, bDefaultValue);
 }
 
 
@@ -135,7 +131,7 @@ FString UInstancedCondition_LogicOperator::GetInstancedObjectTitle_Implementatio
 			
 			if (!bFullTitle)
 			{
-				return FString::Printf(TEXT("%s( %d )"), *ConditionName, Conditions.Num());
+				return FString::Printf(TEXT("%s{ %d }"), *ConditionName, Conditions.Num());
 			}
 			
 			TArray<FString> Lines;
@@ -153,7 +149,7 @@ FString UInstancedCondition_LogicOperator::GetInstancedObjectTitle_Implementatio
 				Lines.Add(DefaultValue);
 			}
 			
-			return FString::Printf(TEXT("%s(%s)"), *ConditionName, *FString::Join(Lines, TEXT("\n")));
+			return FString::Printf(TEXT("%s{%s}"), *ConditionName, *FString::Join(Lines, TEXT("\n")));
 			
 		}
 		
@@ -164,7 +160,7 @@ FString UInstancedCondition_LogicOperator::GetInstancedObjectTitle_Implementatio
 			
 			if (!bFullTitle)
 			{
-				return FString::Printf(TEXT("%s( %d )"), *ConditionName, Conditions.Num());
+				return FString::Printf(TEXT("%s{ %d }"), *ConditionName, Conditions.Num());
 			}
 			
 			TArray<FString> Lines;
@@ -182,7 +178,7 @@ FString UInstancedCondition_LogicOperator::GetInstancedObjectTitle_Implementatio
 				Lines.Add(DefaultValue);
 			}
 
-			return FString::Printf(TEXT("%s(%s)"), *ConditionName, *FString::Join(Lines, TEXT("\n")));
+			return FString::Printf(TEXT("%s{%s}"), *ConditionName, *FString::Join(Lines, TEXT("\n")));
 		}
 	case EConditionLogicOperatorType::Equal:
 		{
@@ -191,7 +187,7 @@ FString UInstancedCondition_LogicOperator::GetInstancedObjectTitle_Implementatio
 			
 			if (!bFullTitle)
 			{
-				return FString::Printf(TEXT("%s( %d )"), *ConditionName, Conditions.Num());
+				return FString::Printf(TEXT("%s{ %d }"), *ConditionName, Conditions.Num());
 			}
 			
 			TArray<FString> Lines;
@@ -209,7 +205,7 @@ FString UInstancedCondition_LogicOperator::GetInstancedObjectTitle_Implementatio
 				Lines.Add(DefaultValue);
 			}
 			
-			return FString::Printf(TEXT("%s(%s)"), *ConditionName, *FString::Join(Lines, TEXT("\n")));
+			return FString::Printf(TEXT("%s{%s}"), *ConditionName, *FString::Join(Lines, TEXT("\n")));
 		}
 	}
 	

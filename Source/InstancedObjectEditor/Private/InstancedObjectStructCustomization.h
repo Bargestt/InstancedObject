@@ -28,8 +28,6 @@ private:
 	void UpdateTooltip();	
 	FText ReadTitle(bool bFull) const;	
 
-	int32 ParseIndent(FString InString, FString& OutString) const;
-
 	
 private:
 	TSharedPtr<IPropertyHandle> ObjectHandle;
