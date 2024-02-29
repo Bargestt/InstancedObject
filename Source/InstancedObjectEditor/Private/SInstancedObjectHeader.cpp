@@ -90,27 +90,17 @@ class FPropertyEditorInlineClassFilter : public IClassViewerFilter
 public:
 	const UClass* BaseClass;
 	const UClass* InterfaceClass;
-	
-
-	/** The Interface Property, classes are examined for implementing the property's class. */
-	FInterfaceProperty* IntProperty;
-
-	/** Whether or not abstract classes are allowed. */
-	bool bAllowAbstract;
 
 	/** Hierarchy of objects that own this property. Used to check against ClassWithin. */
 	TSet< const UObject* > OwningObjects;
 
 	bool IsClassAllowed(const FClassViewerInitializationOptions& InInitOptions, const UClass* InClass, TSharedRef< FClassViewerFilterFuncs > InFilterFuncs ) override
 	{
-		const bool bChildOfObjectClass = BaseClass && InClass->IsChildOf(BaseClass);
-		const bool bDerivedInterfaceClass = InterfaceClass && InClass->ImplementsInterface(InterfaceClass);
-
 		const bool bMatchesFlags = InClass->HasAnyClassFlags(CLASS_EditInlineNew) && 
-			!InClass->HasAnyClassFlags(CLASS_Hidden | CLASS_HideDropDown | CLASS_Deprecated) &&
-			(bAllowAbstract || !InClass->HasAnyClassFlags(CLASS_Abstract));
+			!InClass->HasAnyClassFlags(CLASS_Hidden | CLASS_HideDropDown | CLASS_Deprecated);
 
-		if( (bChildOfObjectClass || bDerivedInterfaceClass) && bMatchesFlags )
+		if( bMatchesFlags && InClass->IsChildOf(BaseClass) &&
+			(!InterfaceClass || InClass->ImplementsInterface(InterfaceClass)) )
 		{
 			// Verify that the Owners of the property satisfy the ClassWithin constraint of the given class.
 			// When ClassWithin is null, assume it can be owned by anything.
@@ -120,17 +110,15 @@ public:
 		return false;
 	}
 
-	virtual bool IsUnloadedClassAllowed(const FClassViewerInitializationOptions& InInitOptions, const TSharedRef< const IUnloadedBlueprintData > InUnloadedClassData, TSharedRef< FClassViewerFilterFuncs > InFilterFuncs) override
+	virtual bool IsUnloadedClassAllowed(const FClassViewerInitializationOptions& InInitOptions, const TSharedRef< const IUnloadedBlueprintData > InClass, TSharedRef< FClassViewerFilterFuncs > InFilterFuncs) override
 	{
-		const bool bChildOfObjectClass = BaseClass && InUnloadedClassData->IsChildOf(BaseClass);
+		const bool bMatchesFlags = InClass->HasAnyClassFlags(CLASS_EditInlineNew) && 
+			!InClass->HasAnyClassFlags(CLASS_Hidden | CLASS_HideDropDown | CLASS_Deprecated | CLASS_Abstract);
 
-		const bool bMatchesFlags = InUnloadedClassData->HasAnyClassFlags(CLASS_EditInlineNew) && 
-			!InUnloadedClassData->HasAnyClassFlags(CLASS_Hidden | CLASS_HideDropDown | CLASS_Deprecated) &&
-			(bAllowAbstract || !InUnloadedClassData->HasAnyClassFlags((CLASS_Abstract)));
-
-		if (bChildOfObjectClass && bMatchesFlags)
+		if( bMatchesFlags && InClass->IsChildOf(BaseClass) &&
+			(!InterfaceClass || InClass->ImplementsInterface(InterfaceClass)) )
 		{
-			const UClass* ClassWithin = InUnloadedClassData->GetClassWithin();
+			const UClass* ClassWithin = InClass->GetClassWithin();
 
 			// Verify that the Owners of the property satisfy the ClassWithin constraint of the given class.
 			// When ClassWithin is null, assume it can be owned by anything.
@@ -151,8 +139,7 @@ TSharedRef<SWidget> SInstancedObjectHeader::GenerateClassPicker()
 	
 	TSharedPtr<FPropertyEditorInlineClassFilter> ClassFilter = MakeShareable( new FPropertyEditorInlineClassFilter );
 	Options.ClassFilters.Add(ClassFilter.ToSharedRef());
-	ClassFilter->bAllowAbstract = false;		
-	ClassFilter->BaseClass = MetaClass;
+	ClassFilter->BaseClass = MetaClass ? MetaClass : UObject::StaticClass();
 	ClassFilter->InterfaceClass = RequiredInterface;	
 
 	TArray<UObject*> Outers;

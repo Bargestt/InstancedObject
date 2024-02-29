@@ -15,7 +15,8 @@
  * Add metadata to USTRUCT declaration to configure filtering
  *	BaseClass, MustImplement
  *	 - Selects first from: Container, StructProperty, ObjectProperty, StructClassDeclaration
- *	 - Adding filtering will switch to custom EditInlineNew editor, it has limited functionality
+ *	 - Adding filtering will switch to custom EditInlineNew editor
+ *	   - It has limited functionality and not recommended(just make Native class and struct instead)
  *	
  * 
  *  AdvancedWidget - Display with fancy widget
@@ -32,7 +33,8 @@ public:
 	virtual ~FInstancedObjectStructBase()
 	{
 		
-	}	
+	}
+	
 	virtual UObject* Get() const
 	{
 		return nullptr;

@@ -190,7 +190,7 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 					})
 					[				
 						SAssignNew(Switcher, SWidgetSwitcher)
-						+ SWidgetSwitcher::Slot()
+						+ SWidgetSwitcher::Slot().VAlign(VAlign_Center)
 						[
 							SNew(SRichTextBlock)
 							.DecoratorStyleSet(&FAppStyle::Get())

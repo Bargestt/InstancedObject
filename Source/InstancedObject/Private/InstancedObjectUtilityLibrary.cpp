@@ -51,7 +51,60 @@ FString UInstancedObjectUtilityLibrary::GetInstancedObjectTitle(const UObject* O
 	return IInstancedObjectInterface::GetTitleSafe(Object, bFullTitle);
 }
 
-FString UInstancedObjectUtilityLibrary::ApplyIndent(const FIndentParser& Parser, const FString& InString, int32& OutDepth)
+FString UInstancedObjectUtilityLibrary::ClearStylesFromString(const FString& InString)
 {
-	return Parser.Apply(InString, OutDepth);
+	FString OutString;
+	FString Buffer;
+	bool bIsInStyle = false;
+	for (int32 Index = 0; Index < InString.Len(); Index++)
+	{
+		if (!bIsInStyle && InString[Index] == '<')
+		{			
+			bIsInStyle = true;
+			Buffer += InString[Index];
+			continue;
+		}
+		else if (bIsInStyle && InString[Index] == '>')
+		{
+			bIsInStyle = false;
+			Buffer.Empty();
+			continue;
+		}
+		
+		if (bIsInStyle)
+		{
+			Buffer += InString[Index];
+			
+			if (InString[Index] == '\n')
+			{
+				OutString += Buffer;
+				Buffer.Empty();
+				bIsInStyle = false;
+			}
+		}
+		else		
+		{
+			OutString += InString[Index];
+		}			
+	}
+	
+	return OutString + Buffer;
+}
+
+FString UInstancedObjectUtilityLibrary::ApplyIndent(const FIndentParser& Parser, const FString& InString, int32& OutDepth, bool bAppendError)
+{
+	FString IndentedString = Parser.Apply(InString, OutDepth);
+
+	if (bAppendError)
+	{
+		if (OutDepth > 0)
+		{
+			IndentedString += FString::Printf(TEXT("\nmissing %d brackets"), OutDepth);
+		}
+		else if (OutDepth < 0)
+		{
+			IndentedString += FString::Printf(TEXT("\nextra %d brackets"), FMath::Abs(OutDepth));
+		}
+	}
+	return IndentedString;
 }

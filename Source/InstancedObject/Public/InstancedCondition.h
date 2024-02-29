@@ -56,10 +56,10 @@ class INSTANCEDOBJECT_API UInstancedCondition : public UObject, public IInstance
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Condition", meta=(DisplayPriority=-100))
-	bool bCanInvert;
+	bool bCanInvert = true;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition", meta=(DisplayPriority=-100, EditCondition="bCanInvert", EditConditionHides))
-	bool bInvert;
+	bool bInvert = false;
 	
 public:
 	virtual UWorld* GetWorld() const override;
@@ -99,7 +99,7 @@ public:
 	 * @param	Context		Condition context passed to execution
 	 * @param	bDefaultValue	ReturnValue when condition is invalid
 	 */
-	UFUNCTION(BlueprintCallable, Category = "InstancedCondition", meta=(WorldContext="WorldContextObject", AutoCreateRefTerm = "Context", AdvancedDisplay=2))
+	UFUNCTION(BlueprintCallable, Category = "InstancedCondition", meta=(WorldContext="WorldContextObject", CallableWithoutWorldContext, AutoCreateRefTerm = "Context", AdvancedDisplay=2))
 	static bool CheckInstancedCondition(UObject* WorldContextObject, const FInstancedConditionStruct& Condition, const FInstancedConditionContext& Context, bool bDefaultValue = true);
 };
 

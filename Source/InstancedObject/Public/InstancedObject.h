@@ -19,7 +19,7 @@ struct INSTANCEDOBJECT_API FInstancedObjectStruct : public FInstancedObjectStruc
 {
 	GENERATED_BODY();
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object", meta=(MustImplement="/Script/InstancedObjects.InstancedObjectInterface"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object", meta=(MustImplement="/Script/InstancedObject.InstancedObjectInterface"))
 	TObjectPtr<UObject> Object;
 
 	virtual UObject* Get() const override { return Object; }

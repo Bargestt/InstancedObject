@@ -37,6 +37,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "InstancedObject")
 	static FString GetInstancedObjectTitle(const UObject* Object, bool bFullTitle);
 
-	UFUNCTION(BlueprintCallable, Category = "InstancedObject")
-	static FString ApplyIndent(const FIndentParser& Parser, const FString& InString, int32& OutDepth);
+	UFUNCTION(BlueprintPure, Category = "InstancedObject")
+	static FString ClearStylesFromString(const FString& InString);
+
+	UFUNCTION(BlueprintCallable, Category = "InstancedObject", meta=(AutoCreateRefTerm="Parser"))
+	static FString ApplyIndent(const FIndentParser& Parser, const FString& InString, int32& OutDepth, bool bAppendError);
 };
