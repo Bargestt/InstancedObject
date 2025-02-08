@@ -4,6 +4,7 @@
 
 #include "InstancedObjectStruct.h"
 #include "InstancedObjectStructCustomization.h"
+#include "InstancedObjectViewCustomization.h"
 #include "PropertyEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "FInstancedObjectEditorModule"
@@ -14,8 +15,12 @@ class FInstancedObjectEditorModuleInterface : public IInstancedObjectEditorModul
 public:
 	virtual void StartupModule() override
 	{
+		FCoreDelegates::OnPostEngineInit.AddRaw(this, &FInstancedObjectEditorModuleInterface::OnPostEngineInit);		
+	}
+
+	void OnPostEngineInit()
+	{
 		FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked< FPropertyEditorModule >("PropertyEditor");
-		
 		for (TObjectIterator<UScriptStruct> It; It; ++It)
 		{
 			UScriptStruct* Struct  = *It;
@@ -26,9 +31,16 @@ public:
 				PropertyModule.RegisterCustomPropertyTypeLayout(StructName, FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FInstancedObjectStructCustomization::MakeInstance));
 			}			
 		}
+
+		
+		PropertyModule.RegisterCustomPropertyTypeLayout(RegisteredStructs.Add_GetRef(FInstancedObjectView::StaticStruct()->GetFName()),
+			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FInstancedObjectViewCustomization::MakeInstance));
+
 	}
+	
 	virtual void ShutdownModule() override
 	{
+		FCoreDelegates::OnPostEngineInit.RemoveAll(this);
 		if (FPropertyEditorModule* PropertyModule = FModuleManager::GetModulePtr<FPropertyEditorModule>("PropertyEditor"))
 		{
 			for (const FName& Name : RegisteredStructs)

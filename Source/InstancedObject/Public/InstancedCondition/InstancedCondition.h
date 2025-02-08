@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "InstancedObjectInterface.h"
 #include "InstancedObjectStruct.h"
-#include "UObject/Object.h"
+#include "StructUtils/InstancedStruct.h"
 #include "InstancedCondition.generated.h"
 
 
@@ -20,8 +20,19 @@ public:
 	virtual ~FInstancedConditionContext()
 	{	}
 
+	FInstancedConditionContext()
+		: WorldContextObject(nullptr)
+	{ }
+	
+	FInstancedConditionContext(UObject* Object)
+		: WorldContextObject(Object)
+	{ }	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition")
 	TObjectPtr<UObject> WorldContextObject;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition")
+	FInstancedStruct Payload;
 };
 
 /*
@@ -55,7 +66,7 @@ class INSTANCEDOBJECT_API UInstancedCondition : public UObject, public IInstance
 	TObjectPtr<UWorld> World;
 	
 protected:
-	UPROPERTY(EditDefaultsOnly, Category="Condition", meta=(DisplayPriority=-100))
+	UPROPERTY(EditDefaultsOnly, Category="Condition", meta=(DisplayPriority=-100, EditCondition="IsClassDefaultObject", EditConditionHides))
 	bool bCanInvert = true;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition", meta=(DisplayPriority=-100, EditCondition="bCanInvert", EditConditionHides))
@@ -66,6 +77,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "InstancedCondition")
 	bool Check(const FInstancedConditionContext& Context);
+	
+	bool Check(const FInstancedConditionContext& Context, UWorld* WorldOverride);
 
 protected:	
 	UFUNCTION(BlueprintNativeEvent)
@@ -80,6 +93,11 @@ protected:
 	{
 		return FString(TEXT("<RichTextBlock.Bold>")) + String + TEXT("</>");
 	}
+
+#if WITH_EDITOR
+	UFUNCTION()
+	bool IsClassDefaultObject() const { return this->HasAllFlags(RF_ClassDefaultObject); }
+#endif //
 };
 
 
@@ -152,3 +170,15 @@ public:
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
 };
 
+/** External condition asset */
+UCLASS(NotBlueprintable, meta = (DisplayName = ".External"))
+class INSTANCEDOBJECT_API UInstancedCondition_External : public UInstancedCondition
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition")
+	TObjectPtr<class UInstancedConditionAsset> Condition;
+public:
+	virtual bool CheckCondition_Implementation(const FInstancedConditionContext& Context) override;
+	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
+};

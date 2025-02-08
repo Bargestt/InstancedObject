@@ -1,7 +1,7 @@
 ﻿{
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "1.1",
 	"FriendlyName": "InstancedObject",
 	"Description": "Structure wrapper for instanced object for easier use in blueprints",
 	"Category": "Other",
@@ -23,6 +23,6 @@
 			"Name": "InstancedObjectEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
-		}
+		}	
 	]
 }

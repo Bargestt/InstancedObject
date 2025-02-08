@@ -11,7 +11,7 @@ public class InstancedObject : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
+				"Core"
 			}
 			);
 		

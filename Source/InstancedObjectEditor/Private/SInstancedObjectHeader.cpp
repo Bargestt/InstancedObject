@@ -97,7 +97,7 @@ public:
 	bool IsClassAllowed(const FClassViewerInitializationOptions& InInitOptions, const UClass* InClass, TSharedRef< FClassViewerFilterFuncs > InFilterFuncs ) override
 	{
 		const bool bMatchesFlags = InClass->HasAnyClassFlags(CLASS_EditInlineNew) && 
-			!InClass->HasAnyClassFlags(CLASS_Hidden | CLASS_HideDropDown | CLASS_Deprecated);
+			!InClass->HasAnyClassFlags(CLASS_Hidden | CLASS_HideDropDown | CLASS_Deprecated | CLASS_Abstract);
 
 		if( bMatchesFlags && InClass->IsChildOf(BaseClass) &&
 			(!InterfaceClass || InClass->ImplementsInterface(InterfaceClass)) )
@@ -314,47 +314,7 @@ FString SInstancedObjectHeader::GetObjectFlags() const
 	FPropertyAccess::Result Result = ObjectHandle->GetValue( CurrentValue );
 	if( Result == FPropertyAccess::Success && CurrentValue != nullptr )
 	{
-		FString Str;
-		
-#define APPEND_FLAG(Name) if (CurrentValue->HasAllFlags(Name)) Str += FString(TEXT(#Name)) + LINE_TERMINATOR;		
-PRAGMA_DISABLE_DEPRECATION_WARNINGS
-		APPEND_FLAG(RF_NoFlags);			
-		APPEND_FLAG(RF_Public);			
-		APPEND_FLAG(RF_Standalone);			
-		APPEND_FLAG(RF_MarkAsNative);			
-		APPEND_FLAG(RF_Transactional);			
-		APPEND_FLAG(RF_ClassDefaultObject);			
-		APPEND_FLAG(RF_ArchetypeObject);			
-		APPEND_FLAG(RF_Transient);			
-		APPEND_FLAG(RF_MarkAsRootSet);			
-		APPEND_FLAG(RF_TagGarbageTemp);			
-		APPEND_FLAG(RF_NeedInitialization);			
-		APPEND_FLAG(RF_NeedLoad);			
-		APPEND_FLAG(RF_KeepForCooker);			
-		APPEND_FLAG(RF_NeedPostLoad);			
-		APPEND_FLAG(RF_NeedPostLoadSubobjects);			
-		APPEND_FLAG(RF_NewerVersionExists);			
-		APPEND_FLAG(RF_BeginDestroyed);			
-		APPEND_FLAG(RF_FinishDestroyed);			
-		APPEND_FLAG(RF_BeingRegenerated);			
-		APPEND_FLAG(RF_DefaultSubObject);			
-		APPEND_FLAG(RF_WasLoaded);			
-		APPEND_FLAG(RF_TextExportTransient);			
-		APPEND_FLAG(RF_LoadCompleted);			
-		APPEND_FLAG(RF_InheritableComponentTemplate);			
-		APPEND_FLAG(RF_DuplicateTransient);			
-		APPEND_FLAG(RF_StrongRefOnFrame);			
-		APPEND_FLAG(RF_NonPIEDuplicateTransient);			
-		APPEND_FLAG(RF_Dynamic);			
-		APPEND_FLAG(RF_WillBeLoaded);			
-		APPEND_FLAG(RF_HasExternalPackage);			
-		APPEND_FLAG(RF_PendingKill);			
-		APPEND_FLAG(RF_Garbage);			
-		APPEND_FLAG(RF_AllocatedInSharedPage);
-PRAGMA_ENABLE_DEPRECATION_WARNINGS	
-#undef APPEND_FLAG
-		
-		return Str;
+		return LexToString(CurrentValue->GetFlags());
 	}
 	return TEXT("None");
 }

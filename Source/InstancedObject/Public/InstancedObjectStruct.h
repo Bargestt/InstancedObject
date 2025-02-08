@@ -15,8 +15,7 @@
  * Add metadata to USTRUCT declaration to configure filtering
  *	BaseClass, MustImplement
  *	 - Selects first from: Container, StructProperty, ObjectProperty, StructClassDeclaration
- *	 - Adding filtering will switch to custom EditInlineNew editor
- *	   - It has limited functionality and not recommended(just make Native class and struct instead)
+ *	 - Adding filtering will switch to custom EditInlineNew editor, it has limited functionality
  *	
  * 
  *  AdvancedWidget - Display with fancy widget
@@ -24,6 +23,9 @@
  *  - Add IndentSize to configure tooltip auto-indent. Set to -1 to disable auto-indent
  *  - Start text with <NoIndent> to disable indentation for this text
  *  - Uses FAppStyle to decorate text
+ *
+ *  Common ClassHeader:
+ *  UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, DefaultToInstanced, HideCategories=(Hidden), CollapseCategories)
  */
 USTRUCT(BlueprintType, BlueprintInternalUseOnly, meta=(Hidden))
 struct INSTANCEDOBJECT_API FInstancedObjectStructBase
@@ -33,8 +35,7 @@ public:
 	virtual ~FInstancedObjectStructBase()
 	{
 		
-	}
-	
+	}	
 	virtual UObject* Get() const
 	{
 		return nullptr;
@@ -48,4 +49,14 @@ public:
 		const UObject* Obj = Get();
 		return Obj ? Obj->GetClass() : nullptr;
 	}
+};
+
+
+USTRUCT(BlueprintType)
+struct INSTANCEDOBJECT_API FInstancedObjectView
+{
+	GENERATED_BODY();
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Instanced, Category=Instanced)
+	TObjectPtr<UObject> Object;
 };

@@ -98,7 +98,7 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 
 		if (BaseClass && !BaseClass->IsChildOf(MainBaseClass))
 		{
-			ensureMsgf(TEXT("FInstancedObjectStruct: BaseClass from metadata must be child of object property class. Meta: %s, Property: %s"), *GetNameSafe(BaseClass), *GetNameSafe(MainBaseClass));
+			ensureMsgf(false, TEXT("FInstancedObjectStruct: BaseClass from metadata must be child of object property class. Meta: %s, Property: %s"), *GetNameSafe(BaseClass), *GetNameSafe(MainBaseClass));
 			BaseClass = MainBaseClass;
 		}
 
@@ -164,6 +164,8 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 		}
 		else
 		{
+			ObjectEditor->SetVisibility(EVisibility::Hidden);
+			
 			HeaderWidget =
 				SNew(SHorizontalBox)
 				+ SHorizontalBox::Slot()//.Padding(5.0f, 0.0f)
@@ -174,30 +176,32 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 					.ToolTip(CreateTooltipWidget())		
 					.OnHovered_Lambda([this]()
 					{
-						if (Switcher.IsValid())
+						if (Switcher.IsValid() && Switcher->GetChildren()->Num() == 2)
 						{
 							UpdateTooltip();
-							Switcher->SetActiveWidgetIndex(1);
+							Switcher->GetChildren()->GetChildAt(0)->SetVisibility(EVisibility::Hidden);
+							Switcher->GetChildren()->GetChildAt(1)->SetVisibility(EVisibility::Visible);
 						}
 					})
 					.OnUnhovered_Lambda([this]()
 					{
-						if (Switcher.IsValid())
+						if (Switcher.IsValid() && Switcher->GetChildren()->Num() == 2)
 						{
 							UpdateTitle();
-							Switcher->SetActiveWidgetIndex(0);
+							Switcher->GetChildren()->GetChildAt(0)->SetVisibility(EVisibility::Visible);
+							Switcher->GetChildren()->GetChildAt(1)->SetVisibility(EVisibility::Hidden);
 						}
 					})
 					[				
-						SAssignNew(Switcher, SWidgetSwitcher)
-						+ SWidgetSwitcher::Slot().VAlign(VAlign_Center)
+						SAssignNew(Switcher, SOverlay)
+						+ SOverlay::Slot().VAlign(VAlign_Center)
 						[
 							SNew(SRichTextBlock)
 							.DecoratorStyleSet(&FAppStyle::Get())
 							.TextStyle(FAppStyle::Get(), "NormalText")
 							.Text(this, &FInstancedObjectStructCustomization::GetTitle)	
 						]
-						+ SWidgetSwitcher::Slot()
+						+ SOverlay::Slot().VAlign(VAlign_Center)
 						[
 							ObjectEditor.ToSharedRef()
 						]					

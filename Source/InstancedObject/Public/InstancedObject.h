@@ -9,6 +9,7 @@
 #include "InstancedObject.generated.h"
 
 
+
 /*
  * Instanced object with custom display Title and Tooltip
  *
@@ -37,6 +38,27 @@ UCLASS(Abstract, CollapseCategories)
 class INSTANCEDOBJECT_API UInstancedObject_NoCategories : public UInstancedObject
 {
 	GENERATED_BODY()
+};
+
+UCLASS(Abstract, CollapseCategories, meta=(ShowWorldContextPin=true))
+class INSTANCEDOBJECT_API UInstancedObject_NoCategories_WorldPin : public UInstancedObject
+{
+	GENERATED_BODY()
+};
+
+UCLASS(Abstract, CollapseCategories)
+class INSTANCEDOBJECT_API UInstancedObject_NoCategories_CustomWorld : public UInstancedObject
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, meta=(ExposeOnSpawn))
+	TObjectPtr<UObject> WorldOverride;
+
+	virtual UWorld* GetWorld() const override
+	{
+		return WorldOverride ? WorldOverride->GetWorld() : nullptr;
+	}
 };
 
 UCLASS()

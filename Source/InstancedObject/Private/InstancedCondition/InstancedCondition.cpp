@@ -1,7 +1,10 @@
 // Copyright (C) Vasily Bulgakov. 2024. All Rights Reserved.
 
 
-#include "InstancedCondition.h"
+#include "InstancedCondition/InstancedCondition.h"
+
+#include "InstancedCondition/InstancedConditionAsset.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InstancedCondition)
 
 UObject* FInstancedConditionStruct::Get() const
@@ -23,11 +26,35 @@ UWorld* UInstancedCondition::GetWorld() const
 
 bool UInstancedCondition::Check(const FInstancedConditionContext& Context)
 {
+	return Check(Context, nullptr);
+}
+
+bool UInstancedCondition::Check(const FInstancedConditionContext& Context, UWorld* WorldOverride)
+{
 	TRACE_CPUPROFILER_EVENT_SCOPE(UInstancedCondition::Check);
-	bool bResult = false;
 	
-	World = GEngine->GetWorldFromContextObject(Context.WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
-	bResult = CheckCondition(Context) ^ (bCanInvert && bInvert);
+	if (WorldOverride == nullptr)
+	{	
+		if (UActorComponent* ActorComponent = Cast<UActorComponent>(GetOuter()))
+		{
+			WorldOverride = ActorComponent->GetWorld();
+		}
+		if (AActor* Actor = Cast<AActor>(GetOuter()))
+		{
+			WorldOverride = Actor->GetWorld();
+		}
+		if (UInstancedCondition* Object = Cast<UInstancedCondition>(GetOuter()))
+		{
+			WorldOverride = Object->GetWorld();
+		}
+		else
+		{
+			WorldOverride = GEngine->GetWorldFromContextObject(Context.WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+		}
+	}
+	
+	World = WorldOverride;
+	bool bResult = CheckCondition(Context) ^ (bCanInvert && bInvert);
 	World = nullptr;
 	
 	return bResult;
@@ -210,6 +237,17 @@ FString UInstancedCondition_LogicOperator::GetInstancedObjectTitle_Implementatio
 	}
 	
 	return TEXT("");
+}
+
+
+bool UInstancedCondition_External::CheckCondition_Implementation(const FInstancedConditionContext& Context)
+{
+	return Condition ? Condition->Condition.CheckCondition(Context, true) : false;
+}
+
+FString UInstancedCondition_External::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
+{
+	return Condition ? (bInvert ? TEXT("!") : TEXT("")) + GetTitleSafe(Condition->Condition.Object, bFullTitle) : TEXT("None(false)");
 }
 
 
