@@ -12,7 +12,7 @@ void UInstancedEvent_Conditional::ExecuteEvent(const FInstancedEventContext& Con
 	{
 		Event.ExecuteEvent(Context);
 	}
-	BroadcastResult({});
+	BroadcastResult(FInstancedEventTags::Get().Tag_EventEnd);
 }
 
 FString UInstancedEvent_Conditional::GetInstancedObjectTitle_Implementation(bool bFullTitle) const

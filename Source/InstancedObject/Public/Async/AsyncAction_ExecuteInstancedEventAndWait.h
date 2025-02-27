@@ -23,11 +23,14 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject", AutoCreateRefTerm="Context"))
-	static UAsyncAction_ExecuteInstancedEventAndWait* ExecuteInstancedEventAndWait(UObject* WorldContextObject, const FInstancedEventStruct& Event, const FInstancedEventContext& Context, bool bOnce = true);
+	static UAsyncAction_ExecuteInstancedEventAndWait* ExecuteInstancedEventAndWait(UObject* WorldContextObject, const FInstancedEventStruct& Event, const FInstancedEventContext& Context, bool bOnce = true, bool bDuplicateEvent = false);
 
 protected:
 	virtual void Activate() override;
 	virtual void SetReadyToDestroy() override;
+	virtual void Cancel() override;
+
+protected:
 	virtual UWorld* GetWorld() const override;
 
 	void OnResult(const FInstancedEventResult& Result);
@@ -40,5 +43,6 @@ protected:
 	FInstancedEventContext InstancedEventContext;
 
 	bool bOnce = false;
+	bool bDuplicate = false;
 	
 };

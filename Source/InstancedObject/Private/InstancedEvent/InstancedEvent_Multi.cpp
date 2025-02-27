@@ -9,20 +9,29 @@
 
 UInstancedEvent_Multi::UInstancedEvent_Multi()
 {	
-	Execution = TInstancedStruct<FInstancedEventExecutor_Sequence>::Make();
+	Execution.InitializeAs<FInstancedEventExecutor_Sequence>();
 }
 
 void UInstancedEvent_Multi::ExecuteEvent(const FInstancedEventContext& Context)
 {
 	if (!Execution.IsValid() || Execution.GetScriptStruct() == FInstancedEventExecutor::StaticStruct())
 	{
-		Execution = TInstancedStruct<FInstancedEventExecutor>::Make(FInstancedEventExecutor_Sequence());
+		Execution.InitializeAs<FInstancedEventExecutor_Sequence>();
 	}
 	
 	FInstancedEventExecutor& Struct = Execution.GetMutable();
 	Struct.Reset();
 	Struct.Init(this);
 	Struct.Execute(Context);
+}
+
+void UInstancedEvent_Multi::Cancel()
+{
+	if (FInstancedEventExecutor* Struct = Execution.GetMutablePtr())
+	{
+		Struct->Reset();
+	}	
+	Super::Cancel();
 }
 
 FString UInstancedEvent_Multi::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
@@ -35,12 +44,20 @@ FString UInstancedEvent_Multi::GetInstancedObjectTitle_Implementation(bool bFull
 		ExecutionStr = Execution.Get().GetDisplayString(Execution.GetScriptStruct());
 		if (ExecutionStr.IsEmpty())
 		{
-			ExecutionStr = Execution.GetScriptStruct()->GetDisplayNameText().ToString();
+#if WITH_EDITOR
+			ExecutionStr = Execution.GetScriptStruct()->GetDisplayNameText().ToString();			
+#else
+			ExecutionStr = Execution.GetScriptStruct()->GetName();
+#endif //
 		}
 	}
 	else
 	{
-		ExecutionStr = FInstancedEventExecutor_Sequence::StaticStruct()->GetDisplayNameText().ToString();
+#if WITH_EDITOR
+		ExecutionStr = FInstancedEventExecutor_Sequence::StaticStruct()->GetDisplayNameText().ToString();			
+#else
+		ExecutionStr = FInstancedEventExecutor_Sequence::StaticStruct()->GetName();
+#endif //
 	}	
 	
 	if (!bFullTitle)
@@ -72,7 +89,7 @@ void UInstancedEvent_Multi::End()
 	{
 		Execution.GetMutable().Reset();
 	}
-	BroadcastResult({});
+	BroadcastResult(FInstancedEventTags::Get().Tag_EventEnd);
 }
 
 

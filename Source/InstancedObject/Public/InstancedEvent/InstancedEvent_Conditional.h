@@ -11,7 +11,7 @@
  * Execute event if condition succeeds
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = ".Conditional"))
-class INSTANCEDOBJECT_API UInstancedEvent_Conditional : public UInstancedEvent
+class INSTANCEDOBJECT_API UInstancedEvent_Conditional : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()	
 public:

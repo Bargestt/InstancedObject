@@ -10,7 +10,7 @@
 
 /** Execute multiple events */
 UCLASS(NotBlueprintable, meta = (DisplayName = ".Multi"))
-class INSTANCEDOBJECT_API UInstancedEvent_Multi : public UInstancedEvent
+class INSTANCEDOBJECT_API UInstancedEvent_Multi : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()
 public:
@@ -22,6 +22,7 @@ public:
 
 	UInstancedEvent_Multi();
 	virtual void ExecuteEvent(const FInstancedEventContext& Context) override;
+	virtual void Cancel() override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
 
 	virtual void BeginDestroy() override;
@@ -45,7 +46,13 @@ public:
 	virtual void Init(UInstancedEvent_Multi* InOwner) { Owner = InOwner; }
 	virtual void Reset() { }
 	virtual void Execute(const FInstancedEventContext& Context) { }
-	virtual FString GetDisplayString(const UScriptStruct* ThisStruct) const { return ThisStruct->GetDisplayNameText().ToString(); };
+	virtual FString GetDisplayString(const UScriptStruct* ThisStruct) const {
+#if WITH_EDITOR
+		return ThisStruct->GetDisplayNameText().ToString();			
+#else
+		return ThisStruct->GetName();
+#endif //
+	}
 protected:
 	void End() const
 	{		

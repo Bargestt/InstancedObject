@@ -11,7 +11,7 @@
  * Wait condition success to execute event and finish 
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = ".Wait Condition"))
-class INSTANCEDOBJECT_API UInstancedEvent_WaitCondition : public UInstancedEvent
+class INSTANCEDOBJECT_API UInstancedEvent_WaitCondition : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()
 public:
@@ -25,6 +25,7 @@ public:
 	FInstancedEventStruct Event;
 protected:
 	virtual void ExecuteEvent(const FInstancedEventContext& Context) override;
+	virtual void Cancel() override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
 	virtual void Check();
 protected:

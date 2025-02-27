@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "InstancedObjectInterface.h"
 #include "InstancedObjectStruct.h"
-#include "StructUtils/InstancedStruct.h"
+#include "InstancedStruct.h"
 #include "InstancedCondition.generated.h"
 
 

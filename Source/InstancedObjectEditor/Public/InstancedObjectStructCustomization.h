@@ -19,7 +19,7 @@ public:
 	virtual void CustomizeHeader(TSharedRef<IPropertyHandle> PropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& CustomizationUtils) override;
 	virtual void CustomizeChildren(TSharedRef<IPropertyHandle> PropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils) override;
 	//~ End IPropertyTypeCustomization Interface
-private:
+protected:
 	
 
 	
@@ -29,10 +29,11 @@ private:
 	FText ReadTitle(bool bFull) const;	
 
 	
-private:
+protected:
 	TSharedPtr<IPropertyHandle> ObjectHandle;
+	TSharedPtr<SWidget> HeaderWidget;
 	TSharedPtr<SWidget> Switcher;
-	bool bRemoveBrackets;
+	bool bRemoveBrackets = false;
 	int32 IndentSize = 4;
 	FText Title;
 	FText GetTitle() const { return Title; }

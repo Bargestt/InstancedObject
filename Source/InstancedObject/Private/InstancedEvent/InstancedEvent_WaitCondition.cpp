@@ -7,11 +7,7 @@
 
 void UInstancedEvent_WaitCondition::ExecuteEvent(const FInstancedEventContext& Context)
 {
-	if (UWorld* World = TimerWorld.Get())
-	{		
-		World->GetTimerManager().ClearTimer(TimerHandle);		
-	}
-	TimerWorld.Reset();
+	Cancel();
 	
 	if (UWorld* World = GetWorld())
 	{
@@ -36,6 +32,17 @@ void UInstancedEvent_WaitCondition::ExecuteEvent(const FInstancedEventContext& C
 	}
 }
 
+void UInstancedEvent_WaitCondition::Cancel()
+{
+	if (UWorld* World = TimerWorld.Get())
+	{		
+		World->GetTimerManager().ClearTimer(TimerHandle);		
+	}
+	TimerWorld.Reset();
+	
+	Super::Cancel();
+}
+
 FString UInstancedEvent_WaitCondition::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
 {
 	if (!bFullTitle)
@@ -57,6 +64,6 @@ void UInstancedEvent_WaitCondition::Check()
 		TimerWorld.Reset();
 
 		Event.ExecuteEvent(CachedEventContext);
-		BroadcastResult({});
+		BroadcastResult(FInstancedEventTags::Get().Tag_EventEnd);
 	}
 }

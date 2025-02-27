@@ -10,7 +10,7 @@
  * Repeatedly execute event
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = ".Repeat"))
-class INSTANCEDOBJECT_API UInstancedEvent_Repeat : public UInstancedEvent
+class INSTANCEDOBJECT_API UInstancedEvent_Repeat : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()
 public:
@@ -27,6 +27,7 @@ public:
 	FInstancedEventStruct Event;
 protected:
 	virtual void ExecuteEvent(const FInstancedEventContext& Context) override;
+	virtual void Cancel() override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
 	virtual void CreateTimer();
 	virtual void Execute();

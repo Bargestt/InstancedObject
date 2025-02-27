@@ -20,7 +20,7 @@ void UInstancedEvent_Switch::ExecuteEvent(const FInstancedEventContext& Context)
 			}
 		}
 	}
-	BroadcastResult({});
+	BroadcastResult(FInstancedEventTags::Get().Tag_EventEnd);
 }
 
 FString UInstancedEvent_Switch::GetInstancedObjectTitle_Implementation(bool bFullTitle) const

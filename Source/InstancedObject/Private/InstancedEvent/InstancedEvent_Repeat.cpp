@@ -7,11 +7,7 @@
 
 void UInstancedEvent_Repeat::ExecuteEvent(const FInstancedEventContext& Context)
 {	
-	if (UWorld* World = TimerWorld.Get())
-	{		
-		World->GetTimerManager().ClearTimer(TimerHandle);		
-	}
-	TimerWorld.Reset();
+	Cancel();
 
 	if (UWorld* World = GetWorld())
 	{
@@ -39,6 +35,16 @@ void UInstancedEvent_Repeat::ExecuteEvent(const FInstancedEventContext& Context)
 	{
 		UE_LOG(LogInstancedObject, Log, TEXT("%s: No world from %s"), *GetName(), *GetNameSafe(Context.WorldContextObject));
 	}
+}
+
+void UInstancedEvent_Repeat::Cancel()
+{
+	if (UWorld* World = TimerWorld.Get())
+	{		
+		World->GetTimerManager().ClearTimer(TimerHandle);		
+	}
+	TimerWorld.Reset();
+	Super::Cancel();
 }
 
 FString UInstancedEvent_Repeat::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
@@ -143,6 +149,6 @@ void UInstancedEvent_Repeat::Execute()
 			World->GetTimerManager().ClearTimer(TimerHandle);		
 		}
 		TimerWorld.Reset();
-		BroadcastResult({});
+		BroadcastResult(FInstancedEventTags::Get().Tag_EventEnd);
 	}
 }

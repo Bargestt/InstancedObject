@@ -23,7 +23,7 @@ struct FInstancedEvent_SwitchPair
  * Execute one or multiple events that has condition successes
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = ".Switch"))
-class INSTANCEDOBJECT_API UInstancedEvent_Switch : public UInstancedEvent
+class INSTANCEDOBJECT_API UInstancedEvent_Switch : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()
 public:

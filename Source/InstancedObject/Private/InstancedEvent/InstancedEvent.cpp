@@ -2,9 +2,20 @@
 
 
 #include "InstancedEvent/InstancedEvent.h"
+
+#include "InstancedObjectModule.h"
 #include "Misc/DataValidation.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InstancedEvent)
+
+FInstancedEventTags FInstancedEventTags::Instance;
+
+void FInstancedEventTags::Initialize(const FInstancedEventTags& Tags)
+{
+	UE_LOG(LogInstancedObject, Log, TEXT("FInstancedEventTags were initialized"));
+	checkNoReentry();
+	Instance = Tags;
+}
 
 UObject* FInstancedEventStruct::Get() const
 {
@@ -46,6 +57,14 @@ void UInstancedEvent::Execute(const FInstancedEventContext& Context)
 	ExecuteEvent(Context);
 }
 
+void UInstancedEvent::Cancel()
+{
+	if (GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint) || !GetClass()->HasAnyClassFlags(CLASS_Native))
+	{
+		BP_CancelEvent();
+	}
+}
+
 void UInstancedEvent::ExecuteEvent(const FInstancedEventContext& Context)
 {
 	if (GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint) || !GetClass()->HasAnyClassFlags(CLASS_Native))
@@ -54,11 +73,12 @@ void UInstancedEvent::ExecuteEvent(const FInstancedEventContext& Context)
 	}
 }
 
-void UInstancedEvent::BroadcastResult(const FInstancedStruct& Data)
+void UInstancedEvent::BroadcastResult(const FGameplayTag& Type, const FInstancedStruct& Data)
 {
 	FInstancedEventResult Result
 	{
 		.Event = this,
+		.Type = Type.IsValid() ? Type : FInstancedEventTags::Get().Tag_ReplaceInvalid,
 		.Data = Data
 	};
 	OnResultNative.Broadcast(Result);
@@ -70,11 +90,11 @@ void UInstancedEvent::BroadcastResult(const FInstancedStruct& Data)
  *--------------------------------------------*/
 
 
-void UInstancedEventBlueprintLibrary::ExecuteInstancedEvent(UObject* WorldContextObject, const FInstancedEventStruct& Event, const FInstancedEventContext& Context, const FInstancedEventResultDelegate& OnEnd)
+void UInstancedEventBlueprintLibrary::ExecuteInstancedEvent(UObject* WorldContextObject, const FInstancedEventStruct& Event, const FInstancedEventContext& Context, const FInstancedEventResultDelegate& Result)
 {
-	if (OnEnd.IsBound() && Event.Object)
+	if (Result.IsBound() && Event.Object)
 	{
-		Event.Object->OnResult.AddUnique(OnEnd);
+		Event.Object->OnResult.AddUnique(Result);
 	}
 	
 	if (Context.WorldContextObject == nullptr)

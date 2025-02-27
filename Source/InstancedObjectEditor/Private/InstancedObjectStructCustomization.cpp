@@ -18,12 +18,16 @@
 
 void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> PropertyHandle, FDetailWidgetRow& HeaderRow, IPropertyTypeCustomizationUtils& CustomizationUtils)
 {
-	ObjectHandle = PropertyHandle->GetChildHandle("Object", false);	
+	ObjectHandle = PropertyHandle->GetChildHandle("Object", false);
+	if (PropertyHandle->HasMetaData(TEXT("ShowOnlyInnerProperties")))
+	{
+		return;
+	}
 	ObjectHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FInstancedObjectStructCustomization::UpdateTitle));
 	ObjectHandle->SetOnChildPropertyValueChanged(FSimpleDelegate::CreateSP(this, &FInstancedObjectStructCustomization::UpdateTitle));
 	
 	
-	TSharedPtr<SWidget> HeaderWidget;
+	HeaderWidget.Reset();
 	if (ObjectHandle.IsValid())
 	{
 		UpdateTitle();
@@ -240,7 +244,14 @@ void FInstancedObjectStructCustomization::CustomizeChildren(TSharedRef<IProperty
 			{
 				for (uint32 Index = 0; Index < NumChildren; Index++)
 				{
-					ChildBuilder.AddProperty(ObjectInstanceHandle->GetChildHandle(Index).ToSharedRef());
+					TSharedRef<IPropertyHandle> ChildHandle = ObjectInstanceHandle->GetChildHandle(Index).ToSharedRef();
+					if (!ChildHandle->GetProperty()->HasAnyPropertyFlags(CPF_Protected) &&
+						!ChildHandle->GetBoolMetaData(TEXT("BlueprintProtected")) &&
+						!ChildHandle->GetBoolMetaData(TEXT("BlueprintPrivate")))
+					{
+						ChildBuilder.AddProperty(ChildHandle);
+					}
+					
 				}
 			}
 		}
