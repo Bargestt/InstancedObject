@@ -23,7 +23,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
 	bool bRecalculateDelay = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
 	FInstancedEventStruct Event;
 protected:
 	virtual void ExecuteEvent(const FInstancedEventContext& Context) override;

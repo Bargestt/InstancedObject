@@ -18,7 +18,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
 	FInstancedConditionStruct Condition;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
 	FInstancedEventStruct Event;
 	
 protected:

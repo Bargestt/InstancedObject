@@ -17,7 +17,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
 	FVector2D DelayRange = FVector2D(1, -1);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
 	FInstancedEventStruct Event;
 
 protected:

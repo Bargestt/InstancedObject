@@ -17,7 +17,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(ForceInlineRow))
 	TMap<FGameplayTag, FGameplayTag> EventRemap;	
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
 	FInstancedEventStruct Event;
 
 	TArray<FGameplayTag> ReceivedEvents;

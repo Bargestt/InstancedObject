@@ -17,7 +17,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", NoClear, meta=(ExcludebaseStruct))
 	TInstancedStruct<struct FInstancedEventExecutor> Execution;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
 	TArray<FInstancedEventStruct> Events;
 
 	UInstancedEvent_Multi();

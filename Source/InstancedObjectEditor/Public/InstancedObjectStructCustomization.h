@@ -21,20 +21,31 @@ public:
 	//~ End IPropertyTypeCustomization Interface
 protected:
 	
-
-	
+	TSharedRef<SWidget> CreateHeaderWidget();	
 	TSharedRef<IToolTip> CreateTooltipWidget();
+
+	TSharedRef<SWidget> CreateObjectHeaderWidget(IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils);	
+	
+	static const FString* FindMetaData(const TSharedPtr<IPropertyHandle>& ObjectHandle, const FName& Key);
+
+	static bool CanDisplayChild(const TSharedRef<IPropertyHandle>& ChildHandle);
+	
 	void UpdateTitle();
 	void UpdateTooltip();	
 	FText ReadTitle(bool bFull) const;	
 
+
 	
 protected:
+	TSharedPtr<IPropertyHandle> StructHandle;
 	TSharedPtr<IPropertyHandle> ObjectHandle;
+
+	
 	TSharedPtr<SWidget> HeaderWidget;
 	TSharedPtr<SWidget> Switcher;
-	bool bRemoveBrackets = false;
-	int32 IndentSize = 4;
+
+	TSharedPtr<SBox> ObjectHeaderPanel;
+	
 	FText Title;
 	FText GetTitle() const { return Title; }
 	FText Tooltip;

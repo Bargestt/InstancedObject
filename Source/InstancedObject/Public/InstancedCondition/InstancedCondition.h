@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "InstancedObjectInterface.h"
 #include "InstancedObjectStruct.h"
-#include "InstancedStruct.h"
+#include "StructUtils/InstancedStruct.h"
 #include "InstancedCondition.generated.h"
 
 
@@ -40,7 +40,7 @@ public:
  *
  * Can filter selection using BaseClass meta data(USTRUCT or UPROPERTY)
  */
-USTRUCT(BlueprintType, meta=(AdvancedWidget, IndentSize=4))
+USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedConditionStruct : public FInstancedObjectStructBase
 {
 	GENERATED_BODY();

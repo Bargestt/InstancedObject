@@ -6,12 +6,28 @@
 #include "GameplayTagContainer.h"
 #include "InstancedObjectInterface.h"
 #include "InstancedObjectStruct.h"
-#include "InstancedStruct.h"
-#include "Misc/LazySingleton.h"
+#include "StructUtils/InstancedStruct.h"
 #include "InstancedEvent.generated.h"
 
 
 class UInstancedEvent;
+
+struct INSTANCEDOBJECT_API FInstancedEventTags
+{
+public:
+	FGameplayTag Tag_EventEnd;
+	FGameplayTag Tag_EventSuccess;
+	FGameplayTag Tag_EventFail;
+	
+	FGameplayTag Tag_ReplaceInvalid;
+	
+public:
+	static const FInstancedEventTags& Get() { return Instance; }
+	static void Initialize(const FInstancedEventTags& Tags);
+
+private:
+	static FInstancedEventTags Instance;
+};
 
 
 USTRUCT(BlueprintType)
@@ -43,28 +59,17 @@ struct FInstancedEventResult
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Event")
 	FInstancedStruct Data;
+
+	bool IsEndEvent() const { return Type.MatchesTag(FInstancedEventTags::Get().Tag_EventEnd); }
+	bool IsSuccessEvent() const { return Type.MatchesTag(FInstancedEventTags::Get().Tag_EventSuccess); }
+	bool IsFailEvent() const { return Type.MatchesTag(FInstancedEventTags::Get().Tag_EventFail); }
 };
 DECLARE_DYNAMIC_DELEGATE_OneParam(FInstancedEventResultDelegate, const FInstancedEventResult&, Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInstancedEventResultSignature, const FInstancedEventResult&, Result);
 DECLARE_MULTICAST_DELEGATE_OneParam(FInstancedEventResultSignature_Native, const FInstancedEventResult&);
 
 
-struct INSTANCEDOBJECT_API FInstancedEventTags
-{
-public:
-	FGameplayTag Tag_EventEnd;
-	FGameplayTag Tag_EventSuccess;
-	FGameplayTag Tag_EventFail;
-	
-	FGameplayTag Tag_ReplaceInvalid;
-	
-public:
-	static const FInstancedEventTags& Get() { return Instance; }
-	static void Initialize(const FInstancedEventTags& Tags);
 
-private:
-	static FInstancedEventTags Instance;
-};
 
 
 /*
@@ -72,7 +77,7 @@ private:
  *
  * Can filter selection using BaseClass meta data(USTRUCT or UPROPERTY)
  */
-USTRUCT(BlueprintType, meta=(AdvancedWidget, IndentSize=4))
+USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedEventStruct : public FInstancedObjectStructBase
 {
 	GENERATED_BODY();
@@ -120,7 +125,7 @@ protected:
 	void BP_CancelEvent();
 
 protected:
-	UFUNCTION(BlueprintCallable, Category = "InstancedEvent", meta=(BlueprintProtected, AutoCreateRefTerm="Type,Data"))
+	UFUNCTION(BlueprintCallable, Category = "InstancedEvent", meta=(BlueprintProtected, AutoCreateRefTerm="Type,Data", ShowTreeView))
 	void BroadcastResult(const FGameplayTag& Type, const FInstancedStruct& Data = FInstancedStruct());
 
 public:
@@ -128,7 +133,7 @@ public:
 	FInstancedEventResultSignature_Native OnResultNative;
 };
 
-UCLASS(Abstract, NotBlueprintable)
+UCLASS(Abstract, NotBlueprintable, meta=(DisplayName=".Operator"))
 class INSTANCEDOBJECT_API UInstancedEvent_Operator : public UInstancedEvent
 {
 	GENERATED_BODY()

@@ -15,7 +15,7 @@
  *
  * Can filter selection using BaseClass meta data(USTRUCT or UPROPERTY)
  */
-USTRUCT(BlueprintType, meta=(AdvancedWidget, IndentSize=4))
+USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedObjectStruct : public FInstancedObjectStructBase
 {
 	GENERATED_BODY();

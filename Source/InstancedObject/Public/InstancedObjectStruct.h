@@ -13,17 +13,22 @@
  * Inherit from this struct to benefit from Detail customization
  *
  * Add metadata to USTRUCT declaration to configure filtering
- *	BaseClass, MustImplement
+ *	BaseClass, MustImplement, AllowedClasses, DisallowedClasses
  *	 - Selects first from: Container, StructProperty, ObjectProperty, StructClassDeclaration
- *	 - Adding filtering will switch to custom EditInlineNew editor, it has limited functionality
- *	
- * 
- *  AdvancedWidget - Display with fancy widget
+ *	 
+ *  - Supported metadata in struct UPROPERTY
+ *    - MinWidth, MaxWidth - size of class selector
+ *  
  *  - Uses InstancedObjectInterface to display object Title and Tooltip
  *  - Add IndentSize to configure tooltip auto-indent. Set to -1 to disable auto-indent
  *  - Start text with <NoIndent> to disable indentation for this text
  *  - Uses FAppStyle to decorate text
  *
+ *  - Promote Object properties to header using meta Header="Key1:Value,Key2:Value"    
+ *    - MinWidth, MaxWidth
+ *    - Padding, PaddingL, PaddingT, PaddingR, PaddingB
+ *    - HideName
+ *    
  *  Common ClassHeader:
  *  UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, DefaultToInstanced, HideCategories=(Hidden), CollapseCategories)
  */
