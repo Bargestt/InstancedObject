@@ -19,7 +19,7 @@ class INSTANCEDOBJECT_API UAsyncAction_ExecuteInstancedEventAndWait : public UCa
 public:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEvent, const FInstancedEventResult&, Result);
 	UPROPERTY(BlueprintAssignable)
-	FOnEvent OnEnd;
+	FOnEvent OnEvent;
 
 public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject", AutoCreateRefTerm="Context"))

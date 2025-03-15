@@ -70,8 +70,8 @@ UWorld* UAsyncAction_ExecuteInstancedEventAndWait::GetWorld() const
 
 void UAsyncAction_ExecuteInstancedEventAndWait::OnResult(const FInstancedEventResult& Result)
 {
-	OnEnd.Broadcast(Result);
-	if (bOnce)
+	OnEvent.Broadcast(Result);
+	if (bOnce && Result.IsEndEvent())
 	{
 		Cancel();
 	}

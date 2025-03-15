@@ -44,7 +44,7 @@ namespace
 		T OutValue = DefaultValue;
 		if (const FString* ValuePtr = Map.Find(Meta))
 		{
-			LexFromString(OutValue, *ValuePtr);
+			LexFromString(OutValue, **ValuePtr);
 		}
 		return OutValue;
 	}
@@ -134,9 +134,13 @@ void FInstancedObjectStructCustomization::CustomizeHeader(TSharedRef<IPropertyHa
 	.HAlign(HAlign_Fill)
 	[
 		SNew(SHorizontalBox)
-		+ SHorizontalBox::Slot().VAlign(VAlign_Center).MinWidth(75).MaxWidth(600).AutoWidth()
+		+ SHorizontalBox::Slot().VAlign(VAlign_Center).MaxWidth(600).AutoWidth()
 		[
-			HeaderWidget.ToSharedRef()
+			SNew(SBox).MinDesiredWidth(75)
+			[
+				HeaderWidget.ToSharedRef()
+			]
+			
 		]
 		+ SHorizontalBox::Slot().VAlign(VAlign_Center).AutoWidth()
 		[
@@ -234,7 +238,7 @@ TSharedRef<SWidget> FInstancedObjectStructCustomization::CreateHeaderWidget()
 		{
 			if (const FStructProperty* ParentProp = CastField<FStructProperty>(ParentHandle->GetProperty()))
 			{
-				if (ParentProp && ParentProp->Struct && ParentProp->Struct->IsChildOf<FInstancedObjectStructBase>())
+				if (ParentProp && ParentProp->Struct && ParentProp->Struct->IsChildOf(FInstancedObjectStructBase::StaticStruct()))
 				{
 					SourceHandle = ParentHandle;
 					break;
@@ -287,54 +291,59 @@ TSharedRef<SWidget> FInstancedObjectStructCustomization::CreateHeaderWidget()
 	int32 MinWidth = 0;
 	if (const FString* Meta = FindMetaData(ObjectHandle, MD_MinWidth))
 	{
-		LexFromString(MinWidth, *Meta);
+		LexFromString(MinWidth, **Meta);
 	}
 	
 	int32 MaxWidth = 0;
 	if (const FString* Meta = FindMetaData(ObjectHandle, MD_MaxWidth))
 	{
-		LexFromString(MinWidth, *Meta);
+		LexFromString(MinWidth, **Meta);
 	}
 		
 	return
 		SNew(SHorizontalBox)
-		+ SHorizontalBox::Slot().MinWidth(MinWidth > 0 ? MinWidth : TAttribute<float>()).MaxWidth(MaxWidth > 0 ? MaxWidth : TAttribute<float>())//.Padding(5.0f, 0.0f)
+		+ SHorizontalBox::Slot()//.Padding(5.0f, 0.0f)
 		[
-			SNew(SButton)
-			.ButtonStyle(FAppStyle::Get(), "SimpleButton")
-			.ContentPadding(FMargin(0))
-			.ToolTip(CreateTooltipWidget())		
-			.OnHovered_Lambda([this]()
-			{
-				if (Switcher.IsValid() && Switcher->GetChildren()->Num() == 2)
+			SNew(SBox)
+			.MinDesiredWidth(MinWidth > 0 ? MinWidth : FOptionalSize())
+			.MaxDesiredWidth(MaxWidth > 0 ? MaxWidth : FOptionalSize())
+			[
+				SNew(SButton)
+				.ButtonStyle(FAppStyle::Get(), "SimpleButton")
+				.ContentPadding(FMargin(0))
+				.ToolTip(CreateTooltipWidget())		
+				.OnHovered_Lambda([this]()
 				{
-					UpdateTooltip();
-					Switcher->GetChildren()->GetChildAt(0)->SetVisibility(EVisibility::Hidden);
-					Switcher->GetChildren()->GetChildAt(1)->SetVisibility(EVisibility::Visible);
-				}
-			})
-			.OnUnhovered_Lambda([this]()
-			{
-				if (Switcher.IsValid() && Switcher->GetChildren()->Num() == 2)
+					if (Switcher.IsValid() && Switcher->GetChildren()->Num() == 2)
+					{
+						UpdateTooltip();
+						Switcher->GetChildren()->GetChildAt(0)->SetVisibility(EVisibility::Hidden);
+						Switcher->GetChildren()->GetChildAt(1)->SetVisibility(EVisibility::Visible);
+					}
+				})
+				.OnUnhovered_Lambda([this]()
 				{
-					UpdateTitle();
-					Switcher->GetChildren()->GetChildAt(0)->SetVisibility(EVisibility::Visible);
-					Switcher->GetChildren()->GetChildAt(1)->SetVisibility(EVisibility::Hidden);
-				}
-			})
-			[				
-				SAssignNew(Switcher, SOverlay)
-				+ SOverlay::Slot().VAlign(VAlign_Center)
-				[
-					SNew(SRichTextBlock)
-					.DecoratorStyleSet(&FAppStyle::Get())
-					.TextStyle(FAppStyle::Get(), "NormalText")
-					.Text(this, &FInstancedObjectStructCustomization::GetTitle)	
+					if (Switcher.IsValid() && Switcher->GetChildren()->Num() == 2)
+					{
+						UpdateTitle();
+						Switcher->GetChildren()->GetChildAt(0)->SetVisibility(EVisibility::Visible);
+						Switcher->GetChildren()->GetChildAt(1)->SetVisibility(EVisibility::Hidden);
+					}
+				})
+				[				
+					SAssignNew(Switcher, SOverlay)
+					+ SOverlay::Slot().VAlign(VAlign_Center)
+					[
+						SNew(SRichTextBlock)
+						.DecoratorStyleSet(&FAppStyle::Get())
+						.TextStyle(FAppStyle::Get(), "NormalText")
+						.Text(this, &FInstancedObjectStructCustomization::GetTitle)	
+					]
+					+ SOverlay::Slot().VAlign(VAlign_Center)
+					[
+						ObjectEditor.ToSharedRef()
+					]					
 				]
-				+ SOverlay::Slot().VAlign(VAlign_Center)
-				[
-					ObjectEditor.ToSharedRef()
-				]					
 			]
 		];
 }
@@ -420,12 +429,15 @@ TSharedRef<SWidget> FInstancedObjectStructCustomization::CreateObjectHeaderWidge
 						
 						Box->AddSlot()
 						.AutoWidth()
-						.MinWidth(MinWidth)
-						.MaxWidth(MaxWidth)
 						.Padding(Padding + PaddingL, Padding + PaddingT, Padding + PaddingR, Padding + PaddingB)
 						.VAlign(VAlign_Center)
 						[
-							ValueWidget.ToSharedRef()
+							SNew(SBox)
+							.MinDesiredWidth(MinWidth > 0 ? MinWidth : FOptionalSize())
+							.MaxDesiredWidth(MaxWidth > 0 ? MaxWidth : FOptionalSize())
+							[
+								ValueWidget.ToSharedRef()
+							]
 						];
 					}					
 				}
@@ -488,6 +500,11 @@ const FString* FInstancedObjectStructCustomization::FindMetaData(const TSharedPt
 
 bool FInstancedObjectStructCustomization::CanDisplayChild(const TSharedRef<IPropertyHandle>& ChildHandle)
 {
+	if (ChildHandle->IsCategoryHandle())
+	{
+		return true;
+	}
+	
 	const FProperty* Property = ChildHandle->GetProperty();
 	return Property &&
 			!Property->HasAnyPropertyFlags(CPF_Protected) &&

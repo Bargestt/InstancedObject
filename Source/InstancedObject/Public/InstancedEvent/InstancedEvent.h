@@ -6,7 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "InstancedObjectInterface.h"
 #include "InstancedObjectStruct.h"
-#include "StructUtils/InstancedStruct.h"
+#include "InstancedStruct.h"
 #include "InstancedEvent.generated.h"
 
 
@@ -133,7 +133,7 @@ public:
 	FInstancedEventResultSignature_Native OnResultNative;
 };
 
-UCLASS(Abstract, NotBlueprintable, meta=(DisplayName=".Operator"))
+UCLASS(Abstract, NotBlueprintable)
 class INSTANCEDOBJECT_API UInstancedEvent_Operator : public UInstancedEvent
 {
 	GENERATED_BODY()
@@ -164,5 +164,15 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "InstancedEvent")
 	static FGameplayTag GetInstancedEventTag_Fail() { return FInstancedEventTags::Get().Tag_EventFail; }
+
+	UFUNCTION(BlueprintPure, Category = "InstancedEvent", meta=(DisplayName="Is End Result"))
+	static bool IsInstancedEventResult_End(const FInstancedEventResult& Result) { return Result.Type.MatchesTag(FInstancedEventTags::Get().Tag_EventEnd); }
+
+	UFUNCTION(BlueprintPure, Category = "InstancedEvent", meta=(DisplayName="Is Success Resul"))
+	static bool IsInstancedEventResult_Success(const FInstancedEventResult& Result) { return Result.Type.MatchesTag(FInstancedEventTags::Get().Tag_EventSuccess); }
+
+	UFUNCTION(BlueprintPure, Category = "InstancedEvent", meta=(DisplayName="Is Fail Result"))
+	static bool IsInstancedEventResult_Fail(const FInstancedEventResult& Result) { return Result.Type.MatchesTag(FInstancedEventTags::Get().Tag_EventFail); }
+	
 	
 };
