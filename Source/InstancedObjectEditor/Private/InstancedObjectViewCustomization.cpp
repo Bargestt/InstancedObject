@@ -4,6 +4,7 @@
 
 #include "DetailWidgetRow.h"
 #include "IDetailChildrenBuilder.h"
+#include "InstancedObjectEditorUtils.h"
 
 
 #define LOCTEXT_NAMESPACE "FInstancedObjectEditorModule"
@@ -36,7 +37,11 @@ void FInstancedObjectViewCustomization::CustomizeChildren(TSharedRef<IPropertyHa
 			{
 				for (uint32 Index = 0; Index < NumChildren; Index++)
 				{
-					ChildBuilder.AddProperty(ObjectInstanceHandle->GetChildHandle(Index).ToSharedRef());
+					TSharedRef<IPropertyHandle> ChildHandle = ObjectInstanceHandle->GetChildHandle(Index).ToSharedRef();
+					if (FInstancedObjectEditorUtils::CanDisplayChild(ChildHandle))
+					{
+						ChildBuilder.AddProperty(ChildHandle);
+					}		
 				}
 			}
 		}

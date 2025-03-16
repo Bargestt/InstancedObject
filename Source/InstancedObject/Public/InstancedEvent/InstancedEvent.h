@@ -4,9 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "InstancedObjectArrayStruct.h"
 #include "InstancedObjectInterface.h"
 #include "InstancedObjectStruct.h"
-#include "InstancedStruct.h"
+
+#if ENGINE_MINOR_VERSION >= 5
+	#include "StructUtils/InstancedStruct.h"
+#else
+	#include "InstancedStruct.h"
+#endif 
+
 #include "InstancedEvent.generated.h"
 
 
@@ -88,6 +95,21 @@ public:
 	virtual UObject* Get() const override;
 
 	void ExecuteEvent(const FInstancedEventContext& Context) const;
+};
+
+USTRUCT(BlueprintType, meta=(IndentSize=4))
+struct INSTANCEDOBJECT_API FInstancedEventArrayStruct : public FInstancedObjectArrayStructBase
+{
+	GENERATED_BODY();
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object")
+	TArray<TObjectPtr<UInstancedEvent>> Objects;
+
+	virtual TArray<UObject*> GetObjects() const override;
+	virtual int32 GetNumObjects() const override;
+	virtual UObject* GetObjectAt(int32 Index) const override;
+	virtual void RemoveObjectAt(int32 Index) override;
+	virtual int32 InsertObjectAt(UObject* Object, int32 Index) override;
 };
 
 

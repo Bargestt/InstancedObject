@@ -21,6 +21,7 @@ public class InstancedObjectEditor : ModuleRules
             {
                 "CoreUObject",
                 "Engine",
+                "InputCore",
                 "Slate",
                 "SlateCore", 
                 "PropertyEditor",

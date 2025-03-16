@@ -30,6 +30,34 @@ void FInstancedEventStruct::ExecuteEvent(const FInstancedEventContext& Context) 
 	}
 }
 
+TArray<UObject*> FInstancedEventArrayStruct::GetObjects() const
+{
+	return {};
+	//return TArray<UObject*>(Objects);
+}
+
+int32 FInstancedEventArrayStruct::GetNumObjects() const
+{
+	return Objects.Num();
+}
+
+UObject* FInstancedEventArrayStruct::GetObjectAt(int32 Index) const
+{
+	return {};
+	//return Objects[Index];
+}
+
+void FInstancedEventArrayStruct::RemoveObjectAt(int32 Index)
+{
+	Objects.RemoveAt(Index);
+}
+
+int32 FInstancedEventArrayStruct::InsertObjectAt(UObject* Object, int32 Index)
+{
+	return {};
+	//return Objects.Insert(Cast<UInstancedEvent>(Object), Index);
+}
+
 
 UInstancedEvent::UInstancedEvent()
 {

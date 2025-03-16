@@ -5,7 +5,11 @@
 #include "CoreMinimal.h"
 #include "InstancedObjectInterface.h"
 #include "InstancedObjectStruct.h"
-#include "InstancedStruct.h"
+#if ENGINE_MINOR_VERSION >= 5
+	#include "StructUtils/InstancedStruct.h"
+#else
+	#include "InstancedStruct.h"
+#endif 
 #include "InstancedCondition.generated.h"
 
 

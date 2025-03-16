@@ -4,6 +4,7 @@
 
 
 #include "CoreMinimal.h"
+#include "IDetailTreeNode.h"
 #include "InstancedObjectStruct.generated.h"
 
 

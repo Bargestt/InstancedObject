@@ -2,6 +2,8 @@
 
 #include "InstancedObjectEditor.h"
 
+#include "InstancedObjectArrayCustomization.h"
+#include "InstancedObjectArrayStruct.h"
 #include "InstancedObjectStruct.h"
 #include "InstancedObjectStructCustomization.h"
 #include "InstancedObjectViewCustomization.h"
@@ -24,12 +26,23 @@ public:
 		for (TObjectIterator<UScriptStruct> It; It; ++It)
 		{
 			UScriptStruct* Struct  = *It;
-			if (!Struct->HasMetaData(TEXT("Hidden")) && Struct->IsChildOf(FInstancedObjectStructBase::StaticStruct()))
+			if (Struct->HasMetaData(TEXT("Hidden")))
+			{
+				continue;
+			}
+			
+			if (Struct->IsChildOf(FInstancedObjectStructBase::StaticStruct()))
 			{
 				FName StructName = Struct->GetFName();
 				RegisteredStructs.Add(StructName);
 				PropertyModule.RegisterCustomPropertyTypeLayout(StructName, FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FInstancedObjectStructCustomization::MakeInstance));
-			}			
+			}
+			else if (Struct->IsChildOf(FInstancedObjectArrayStructBase::StaticStruct()))
+			{
+				FName StructName = Struct->GetFName();
+				RegisteredStructs.Add(StructName);
+				PropertyModule.RegisterCustomPropertyTypeLayout(StructName, FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FInstancedObjectArrayStructCustomization::MakeInstance));
+			}	
 		}
 
 		
