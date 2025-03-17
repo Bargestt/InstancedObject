@@ -7,8 +7,6 @@
 #include "InstancedObjectStruct.h"
 #include "InstancedObjectStructCustomization.h"
 #include "InstancedObjectViewCustomization.h"
-#include "ObjectWithDetails.h"
-#include "ObjectWithDetailsCustomization.h"
 #include "PropertyEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "FInstancedObjectEditorModule"
@@ -50,11 +48,6 @@ public:
 		
 		PropertyModule.RegisterCustomPropertyTypeLayout(RegisteredStructs.Add_GetRef(FInstancedObjectView::StaticStruct()->GetFName()),
 			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FInstancedObjectViewCustomization::MakeInstance));
-
-		PropertyModule.RegisterCustomPropertyTypeLayout(RegisteredStructs.Add_GetRef(FObjectWithDetails::StaticStruct()->GetFName()),
-			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FObjectWithDetailsCustomization::MakeInstance));
-		PropertyModule.RegisterCustomPropertyTypeLayout(RegisteredStructs.Add_GetRef(FSoftObjectWithDetails::StaticStruct()->GetFName()),
-			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FObjectWithDetailsCustomization::MakeInstance));
 	}
 	
 	virtual void ShutdownModule() override
