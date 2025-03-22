@@ -277,6 +277,11 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 				
 				TSharedPtr<SWidget> NameWidget, ValueWidget;
 				Row.GetDefaultWidgets(NameWidget, ValueWidget, false);
+
+				TSharedRef<SInstancedObjectHeader> HeaderWidget =
+					SNew(SInstancedObjectHeader, ChildProperty)
+					.bDisplayDefaultPropertyButtons(false)
+					.bAlwaysShowPropertyButtons(false);
 				
 				Row.CustomWidget(true)
 				.NameContent()
@@ -285,10 +290,10 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 				]
 				.ValueContent()
 				[
-					SNew(SInstancedObjectHeader, ChildProperty)
-					.bDisplayDefaultPropertyButtons(false)
-					.bAlwaysShowPropertyButtons(false)
+					HeaderWidget
 				];
+				
+				HeaderWidget->GetHeaderExtensionPanel()->SetContent(FInstancedObjectEditorUtils::CreateHeader_ChildrenEditors(ChildProperty, ChildBuilder));		
 			}
 		}		
 		return;

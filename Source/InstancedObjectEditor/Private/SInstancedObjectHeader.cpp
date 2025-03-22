@@ -43,10 +43,20 @@ void SInstancedObjectHeader::Construct(const FArguments& InArgs, const TSharedPt
 		{
 			TooltipHolder->SetToolTip(GetTooltipWidget());
 		}	
-	}
-
-		
+	}		
 	UpdateTitle();
+
+	int32 MinWidth = InArgs._MinDesiredWidth;
+	if (const FString* Meta = FInstancedObjectEditorUtils::FindMetaData(ObjectHandle, FInstancedObjectMeta::MD_MinWidth))
+	{
+		LexFromString(MinWidth, **Meta);
+	}
+	
+	int32 MaxWidth = InArgs._MaxDesiredWidth;
+	if (const FString* Meta = FInstancedObjectEditorUtils::FindMetaData(ObjectHandle, FInstancedObjectMeta::MD_MaxWidth))
+	{
+		LexFromString(MaxWidth, **Meta);
+	}
 		
 	ChildSlot
 	[
@@ -54,8 +64,8 @@ void SInstancedObjectHeader::Construct(const FArguments& InArgs, const TSharedPt
 		+ SHorizontalBox::Slot().AutoWidth()
 		[
 			SNew(SBox)
-			.MinDesiredWidth(InArgs._MinDesiredWidth)
-			.MaxDesiredWidth(InArgs._MaxDesiredWidth)
+			.MinDesiredWidth(MinWidth > 0 ? MinWidth : FOptionalSize())
+			.MaxDesiredWidth(MaxWidth > 0 ? MaxWidth : FOptionalSize())
 			[
 				SNew(SButton)
 				.ButtonStyle(FAppStyle::Get(), "SimpleButton")

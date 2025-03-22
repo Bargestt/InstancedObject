@@ -4,7 +4,6 @@
 
 
 #include "CoreMinimal.h"
-#include "IDetailTreeNode.h"
 #include "InstancedObjectStruct.generated.h"
 
 
@@ -66,30 +65,3 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Instanced, Category=Instanced)
 	TObjectPtr<UObject> Object;
 };
-
-
-//template<typename T, typename TObject>
-//concept HasObjectMember =
-//	requires(T t) {
-//	static_cast<TObject>(t.Object);
-//	};
-//
-//template <typename TStructType, typename TObjectType>
-//void GetObjectFrom(const TStructType& From, TObjectType& To)
-//{
-//	if constexpr (HasObjectMember<TStructType, TObjectType>)
-//	{
-//		To = From.ToString();
-//	}
-//}
-//
-//template<typename TStructType, typename TObjectType>
-//struct TStructWithObject
-//{	
-//	TObjectType* Get() const
-//	{
-//		TObjectType* Result;
-//		GetObjectFrom(*this, Result);		
-//		return Result;
-//	}
-//};
