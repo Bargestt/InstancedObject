@@ -78,7 +78,6 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FInstancedEventResultSignature_Native, const
 
 
 
-
 /*
  * Instanced object with custom display Title and Tooltip
  *
@@ -86,30 +85,31 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FInstancedEventResultSignature_Native, const
  */
 USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedEventStruct : public FInstancedObjectStructBase
+#if CPP
+	, public TInstancedObjectStruct<FInstancedEventStruct, UInstancedEvent>
+#endif
+
 {
 	GENERATED_BODY();
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object")
 	TObjectPtr<UInstancedEvent> Object;
 
-	virtual UObject* Get() const override;
-
+	virtual UObject* GetObject() const override;
+	virtual void SetObject(UObject* NewObject) override;
 	void ExecuteEvent(const FInstancedEventContext& Context) const;
 };
 
 USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedEventArrayStruct : public FInstancedObjectArrayStructBase
+#if CPP
+	, public TInstancedObjectArrayStruct<FInstancedEventArrayStruct, UInstancedEvent>
+#endif
 {
 	GENERATED_BODY();
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object")
 	TArray<TObjectPtr<UInstancedEvent>> Objects;
-
-	virtual TArray<UObject*> GetObjects() const override;
-	virtual int32 GetNumObjects() const override;
-	virtual UObject* GetObjectAt(int32 Index) const override;
-	virtual void RemoveObjectAt(int32 Index) override;
-	virtual int32 InsertObjectAt(UObject* Object, int32 Index) override;
 };
 
 

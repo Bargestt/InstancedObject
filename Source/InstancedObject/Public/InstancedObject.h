@@ -17,13 +17,17 @@
  */
 USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedObjectStruct : public FInstancedObjectStructBase
+#if CPP
+	, public TInstancedObjectStruct<FInstancedObjectStruct, UObject>
+#endif
 {
 	GENERATED_BODY();
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object", meta=(MustImplement="/Script/InstancedObject.InstancedObjectInterface"))
 	TObjectPtr<UObject> Object;
 
-	virtual UObject* Get() const override { return Object; }
+	virtual UObject* GetObject() const override { return Object; }
+	virtual void SetObject(UObject* NewObject) override { Object = NewObject; }
 };
 
 

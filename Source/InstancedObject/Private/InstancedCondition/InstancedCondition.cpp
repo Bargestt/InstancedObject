@@ -7,9 +7,14 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InstancedCondition)
 
-UObject* FInstancedConditionStruct::Get() const
+UObject* FInstancedConditionStruct::GetObject() const
 {
 	return Object;
+}
+
+void FInstancedConditionStruct::SetObject(UObject* NewObject)
+{
+	Object = Cast<UInstancedCondition>(NewObject);
 }
 
 bool FInstancedConditionStruct::CheckCondition(const FInstancedConditionContext& Context, bool bDefaultValue) const

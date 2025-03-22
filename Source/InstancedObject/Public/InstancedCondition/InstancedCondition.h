@@ -46,13 +46,17 @@ public:
  */
 USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedConditionStruct : public FInstancedObjectStructBase
+#if CPP
+	, public TInstancedObjectStruct<FInstancedConditionStruct, UInstancedCondition>
+#endif
 {
 	GENERATED_BODY();
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object")
 	TObjectPtr<UInstancedCondition> Object;
 
-	virtual UObject* Get() const override;
+	virtual UObject* GetObject() const override;
+	virtual void SetObject(UObject* NewObject) override;
 
 	/* Returns DefaultValue if condition is invalid */
 	bool CheckCondition(const FInstancedConditionContext& Context, bool bDefaultValue = true) const;
