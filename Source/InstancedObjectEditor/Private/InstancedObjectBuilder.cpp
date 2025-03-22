@@ -4,6 +4,7 @@
 
 #include "IDetailChildrenBuilder.h"
 #include "InstancedObjectEditorUtils.h"
+#include "PropertyEditorClipboard.h"
 #include "SInstancedObjectHeader.h"
 
 FInstancedObjectBuilder::FInstancedObjectBuilder(const TSharedRef<IPropertyHandle>& InObjectHandle, const TSharedPtr<IPropertyHandle>& InStructHandle)
@@ -39,8 +40,23 @@ void FInstancedObjectBuilder::GenerateHeaderRowContent(FDetailWidgetRow& HeaderR
 
 	FInstancedObjectEditorUtils::CreateClassRestrictions(ObjectHandle.ToSharedRef(), nullptr);
 	FInstancedObjectEditorUtils::CreateInheritedClassRestrictions(ObjectHandle.ToSharedRef(), StructHandle);
+
+	FUIAction CopyAction, PasteAction;
+	ObjectHandle->CreateDefaultPropertyCopyPasteActions(CopyAction, PasteAction);	
+	PasteAction.ExecuteAction.BindLambda([Prop = ObjectHandle]()
+	{
+		FString ClipboardContent;
+		FPropertyEditorClipboard::ClipboardPaste(ClipboardContent);
+		if (Prop.IsValid())
+		{
+			Prop->SetValueFromFormattedString(ClipboardContent, EPropertyValueSetFlags::InstanceObjects);
+		}		
+	});
 	
-	HeaderRow.NameContent()
+	HeaderRow
+	.CopyAction(CopyAction)
+	.PasteAction(PasteAction)
+	.NameContent()
 	[
 		StructHandle.IsValid() ? StructHandle->CreatePropertyNameWidget() : ObjectHandle->CreatePropertyNameWidget()
 	]
@@ -50,7 +66,8 @@ void FInstancedObjectBuilder::GenerateHeaderRowContent(FDetailWidgetRow& HeaderR
 	.HAlign(HAlign_Fill)
 	[
 		SAssignNew(HeaderWidget, SInstancedObjectHeader, ObjectHandle)
-		.bAlwaysShowPropertyButtons(true)
+		.bAlwaysShowPropertyButtons(AlwaysShowPropertyButtons.Get(true))
+		.bDisplayDefaultPropertyButtons(DisplayDefaultPropertyButtons.Get(true))
 	];
 }
 

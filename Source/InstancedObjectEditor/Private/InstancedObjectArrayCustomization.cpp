@@ -16,9 +16,11 @@
 #include "IStructureDataProvider.h"
 #include "IStructureDetailsView.h"
 #include "PropertyCustomizationHelpers.h"
+#include "PropertyEditorClipboard.h"
 #include "PropertyRestriction.h"
 #include "SInstancedObjectHeader.h"
 #include "DragAndDrop/DecoratedDragDropOp.h"
+#include "Editor/PropertyEditor/Private/PropertyNode.h"
 #include "Widgets/Text/SRichTextBlock.h"
 
 #define LOCTEXT_NAMESPACE "FInstancedObjectEditor"
@@ -272,28 +274,10 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 		for(uint32 Index = 0; Index < ChildrenNum; Index++)
 		{
 			if (TSharedPtr<IPropertyHandle> ChildProperty = ArrayHandle->GetChildHandle(Index))
-			{								
-				IDetailPropertyRow& Row = ChildBuilder.AddProperty(ChildProperty.ToSharedRef());
-				
-				TSharedPtr<SWidget> NameWidget, ValueWidget;
-				Row.GetDefaultWidgets(NameWidget, ValueWidget, false);
-
-				TSharedRef<SInstancedObjectHeader> HeaderWidget =
-					SNew(SInstancedObjectHeader, ChildProperty)
-					.bDisplayDefaultPropertyButtons(false)
-					.bAlwaysShowPropertyButtons(false);
-				
-				Row.CustomWidget(true)
-				.NameContent()
-				[
-					NameWidget.ToSharedRef()
-				]
-				.ValueContent()
-				[
-					HeaderWidget
-				];
-				
-				HeaderWidget->GetHeaderExtensionPanel()->SetContent(FInstancedObjectEditorUtils::CreateHeader_ChildrenEditors(ChildProperty, ChildBuilder));		
+			{
+				TSharedRef<FInstancedObjectBuilder> Builder = MakeShared<FInstancedObjectBuilder>(ChildProperty.ToSharedRef());
+				Builder->DisplayDefaultPropertyButtons = false;
+				ChildBuilder.AddCustomBuilder(Builder);	
 			}
 		}		
 		return;
@@ -316,6 +300,13 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 			Args.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 		}	
 		SelectionDetails = PropertyModule.CreateDetailView(Args);
+		SelectionDetails->SetIsPropertyVisibleDelegate(FIsPropertyVisible::CreateLambda([](const FPropertyAndParent& Prop)
+		{
+			return	!Prop.Property.HasAnyPropertyFlags(CPF_Protected) &&
+					!Prop.Property.GetBoolMetaData(TEXT("BlueprintProtected")) &&
+					!Prop.Property.GetBoolMetaData(TEXT("BlueprintPrivate")) &&
+					!Prop.Property.GetBoolMetaData(FInstancedObjectMeta::MD_HideChild);
+		}));
 	}
 
 	int32 MinHeight = 0;
@@ -434,6 +425,17 @@ public:
 		}
 		ListEntry->DragDropHandler->RowWidgetWeak = AsShared();
 
+		InEntry->Handle->CreateDefaultPropertyCopyPasteActions(CopyAction, PasteAction);
+		PasteAction.ExecuteAction.BindLambda([Prop = InEntry->Handle]()
+		{
+			FString ClipboardContent;
+			FPropertyEditorClipboard::ClipboardPaste(ClipboardContent);
+			if (Prop.IsValid())
+			{
+				Prop->SetValueFromFormattedString(ClipboardContent, EPropertyValueSetFlags::InstanceObjects);
+			}		
+		});
+
 		STableRow::Construct(
 			STableRow::FArguments()
 			.Style( &FAppStyle::GetWidgetStyle<FTableRowStyle>("SimpleTableView.Row") )
@@ -475,7 +477,7 @@ public:
 					SNew(SImage)
 					.Image(FAppStyle::Get().GetBrush("DetailsView.GridLine"))
 					.DesiredSizeOverride(FVector2D(1, 1.5))
-				]
+				]				
 			]
 		, InOwnerTableView);
 	}
@@ -506,9 +508,41 @@ public:
 		}
 		return FReply::Unhandled();
 	}
+
+	FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	{
+		if(MouseEvent.GetEffectingButton() == EKeys::RightMouseButton && !StaticCastSharedRef<STableViewBase>( OwnerTablePtr.Pin()->AsWidget() )->IsRightClickScrolling() )
+		{
+			const FWidgetPath WidgetPath = MouseEvent.GetEventPath() != nullptr ? *MouseEvent.GetEventPath() : FWidgetPath();
+
+			FMenuBuilder Menu(true, nullptr);
+			Menu.AddMenuEntry(
+				NSLOCTEXT("PropertyView", "CopyProperty", "Copy"),
+				NSLOCTEXT("PropertyView", "CopyProperty_ToolTip", "Copy this property value"),
+				FSlateIcon(FCoreStyle::Get().GetStyleSetName(), "GenericCommands.Copy"),
+				CopyAction);
+
+			Menu.AddMenuEntry(
+				NSLOCTEXT("PropertyView", "PasteProperty", "Paste"),
+				NSLOCTEXT("PropertyView", "PasteProperty_ToolTip", "Paste the copied value here"),
+				FSlateIcon(FCoreStyle::Get().GetStyleSetName(), "GenericCommands.Paste"),
+				PasteAction);
+			
+			
+			FSlateApplication::Get().PushMenu(AsShared(), WidgetPath, Menu.MakeWidget(), MouseEvent.GetScreenSpacePosition(), FPopupTransitionEffect::ContextMenu);
+		}
+		return STableRow::OnMouseButtonUp( MyGeometry, MouseEvent );
+	}
+
+	virtual FReply OnPreviewMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	{
+		return STableRow::OnMouseButtonDown(MyGeometry, MouseEvent);
+	}
 	
 private:
 	TSharedPtr<FEntryType> ListEntry;
+	FUIAction CopyAction;
+	FUIAction PasteAction;
 };
 
 TSharedRef<ITableRow> FInstancedObjectArrayStructCustomization::OnGenerateWidgetForList(TSharedPtr<FListHandleEntry> ListEntry, const TSharedRef<STableViewBase>& OwnerTable)

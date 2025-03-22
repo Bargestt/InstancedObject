@@ -8,6 +8,10 @@ class SInstancedObjectHeader;
 class FInstancedObjectBuilder : public IDetailCustomNodeBuilder, public TSharedFromThis<FInstancedObjectBuilder>
 {
 public:
+	TOptional<bool> AlwaysShowPropertyButtons;
+	TOptional<bool> DisplayDefaultPropertyButtons;
+	
+public:
 	FInstancedObjectBuilder(const TSharedRef<IPropertyHandle>& InObjectHandle, const TSharedPtr<IPropertyHandle>& InStructHandle = nullptr);
 	virtual ~FInstancedObjectBuilder() override;;
 
