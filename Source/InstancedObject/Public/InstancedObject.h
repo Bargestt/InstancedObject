@@ -17,9 +17,6 @@
  */
 USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedObjectStruct : public FInstancedObjectStructBase
-#if CPP
-	, public TInstancedObjectStruct<FInstancedObjectStruct, UObject>
-#endif
 {
 	GENERATED_BODY();
 public:

@@ -40,23 +40,35 @@ public:
 	virtual ~FInstancedObjectStructBase()
 	{
 		
-	}	
+	}
+public:	
 	virtual UObject* GetObject() const
 	{
 		return nullptr;
-	}
-	
+	}	
 	virtual void SetObject(UObject* NewObject)
 	{
 		
 	}
+public:
 	
-	virtual bool IsValid() const 
-	{ 
+	UObject* Get() const
+	{
+		return GetObject();
+	}
+	
+	template<typename T = UObject>
+	T* Get() const
+	{
+		return Cast<T>(GetObject());
+	}	
+	
+	bool IsValid() const
+	{
 		return GetObject() != nullptr;
 	}
 	
-	virtual UClass* GetClass() const
+	UClass* GetClass() const
 	{
 		const UObject* Obj = GetObject();
 		return Obj ? Obj->GetClass() : nullptr;
@@ -76,43 +88,4 @@ struct INSTANCEDOBJECT_API FInstancedObjectView
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Instanced, Category=Instanced)
 	TObjectPtr<UObject> Object;
-};
-
-
-
-
-struct CInstancedObjectMemberProvider
-{
-	template <typename TStructType, typename TObjectType>
-	auto Requires(const TStructType& InStruct, TObjectType*& OutObject) -> decltype(
-		OutObject = InStruct.Object
-	);
-};
-
-template<typename TStructType, typename TObjectType>
-struct TInstancedObjectStruct
-{
-	TObjectType* Get() const
-	{
-		static_assert(TModels_V<CInstancedObjectMemberProvider, TStructType, TObjectType>, "Must have Object member");
-		
-		if constexpr (TModels_V<CInstancedObjectMemberProvider, TStructType, TObjectType>)
-		{			
-			return static_cast<const TStructType*>(this)->Object;
-		}
-		return nullptr;
-	}
-	
-	void Set(TObjectType* NewValue)
-	{		
-		if constexpr (TModels_V<CInstancedObjectMemberProvider, TStructType, TObjectType>)
-		{
-			static_cast<TStructType*>(this)->Object = NewValue;
-		}
-	}
-
-	UClass* GetBaseClass() const
-	{
-		return TObjectType::StaticClass();
-	}
 };

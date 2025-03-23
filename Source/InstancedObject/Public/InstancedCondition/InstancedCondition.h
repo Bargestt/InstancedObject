@@ -46,9 +46,6 @@ public:
  */
 USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedConditionStruct : public FInstancedObjectStructBase
-#if CPP
-	, public TInstancedObjectStruct<FInstancedConditionStruct, UInstancedCondition>
-#endif
 {
 	GENERATED_BODY();
 public:

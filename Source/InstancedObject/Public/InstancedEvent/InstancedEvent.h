@@ -85,10 +85,6 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FInstancedEventResultSignature_Native, const
  */
 USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedEventStruct : public FInstancedObjectStructBase
-#if CPP
-	, public TInstancedObjectStruct<FInstancedEventStruct, UInstancedEvent>
-#endif
-
 {
 	GENERATED_BODY();
 public:
@@ -102,9 +98,6 @@ public:
 
 USTRUCT(BlueprintType, meta=(IndentSize=4))
 struct INSTANCEDOBJECT_API FInstancedEventArrayStruct : public FInstancedObjectArrayStructBase
-#if CPP
-	, public TInstancedObjectArrayStruct<FInstancedEventArrayStruct, UInstancedEvent>
-#endif
 {
 	GENERATED_BODY();
 public:
