@@ -124,7 +124,7 @@ public:
 #endif //
 
 
-	UFUNCTION(BlueprintCallable, Category = "InstancedEvent")
+	UFUNCTION(BlueprintCallable, Category = "InstancedEvent", meta=(AutoCreateRefTerm="Context"))
 	void Execute(const FInstancedEventContext& Context);
 
 	UFUNCTION(BlueprintCallable, Category = "InstancedEvent")
