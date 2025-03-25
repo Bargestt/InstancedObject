@@ -284,14 +284,18 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 	}
 	
 
-	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");	
+	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 
-	SelectionDetails = PropertyModule.FindDetailView(FName(PropertyHandle->GetPropertyPath()));
+	
+	uint32 OwnerId = GetTypeHash(ChildBuilder.GetParentCategory().GetParentLayout().GetDetailsView());
+	FName DetailsId = *FString::Printf(TEXT("%s:%d"), *FString(PropertyHandle->GetPropertyPath()), OwnerId);
+
+	SelectionDetails = PropertyModule.FindDetailView(DetailsId);
 	if (!SelectionDetails.IsValid())
 	{
 		FDetailsViewArgs Args;
 		{
-			Args.ViewIdentifier = FName(PropertyHandle->GetPropertyPath());
+			Args.ViewIdentifier = DetailsId;
 			Args.bAllowSearch = false;
 			Args.bShowOptions = false;
 			Args.bShowObjectLabel = false;
@@ -534,10 +538,6 @@ public:
 		return STableRow::OnMouseButtonUp( MyGeometry, MouseEvent );
 	}
 
-	virtual FReply OnPreviewMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
-	{
-		return STableRow::OnMouseButtonDown(MyGeometry, MouseEvent);
-	}
 	
 private:
 	TSharedPtr<FEntryType> ListEntry;
