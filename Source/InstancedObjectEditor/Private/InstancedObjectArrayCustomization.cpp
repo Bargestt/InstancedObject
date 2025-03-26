@@ -401,7 +401,13 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 					NewSelection.Add(ListEntries.Last());
 				}	
 			}
-		}		
+		}
+	
+		if (NewSelection.IsEmpty() && !ListEntries.IsEmpty() && PropertyHandle->HasMetaData(TEXT("ForceSelect")))
+		{
+			NewSelection.Add(ListEntries[0]);
+		}	
+
 		List->ClearSelection();
 		List->SetItemSelection(NewSelection, true, ESelectInfo::Direct);
 		if (NewSelection.IsEmpty())
