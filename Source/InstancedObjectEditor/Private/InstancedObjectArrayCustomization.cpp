@@ -271,15 +271,21 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 	const FString* AdvancedWidget = FInstancedObjectEditorUtils::FindMetaData(ArrayHandle, FInstancedObjectMeta::MD_AdvancedWidget);
 	if (!AdvancedWidget)
 	{
-		for(uint32 Index = 0; Index < ChildrenNum; Index++)
+		TSharedRef<FDetailArrayBuilder> ArrayBuilder = MakeShared<FDetailArrayBuilder>(ArrayHandle.ToSharedRef(), false, false, false);
+		ArrayBuilder->OnGenerateArrayElementWidget(FOnGenerateArrayElementWidget::CreateLambda([PropUtils = CustomizationUtils.GetPropertyUtilities()](TSharedRef<IPropertyHandle> Handle, int32 Index, IDetailChildrenBuilder& Builder)
 		{
-			if (TSharedPtr<IPropertyHandle> ChildProperty = ArrayHandle->GetChildHandle(Index))
+			TSharedRef<FInstancedObjectBuilder> InstanceBuilder = MakeShared<FInstancedObjectBuilder>(Handle, nullptr);
+			InstanceBuilder->DisplayDefaultPropertyButtons = false;
+			InstanceBuilder->OnHeaderGenerated(FInstancedObjectBuilder::FOnHeaderRowGenerated::CreateLambda([WeakHandle = Handle.ToWeakPtr(), PropUtils](FDetailWidgetRow& HeaderRow)
 			{
-				TSharedRef<FInstancedObjectBuilder> Builder = MakeShared<FInstancedObjectBuilder>(ChildProperty.ToSharedRef());
-				Builder->DisplayDefaultPropertyButtons = false;
-				ChildBuilder.AddCustomBuilder(Builder);	
-			}
-		}		
+				if (TSharedPtr<IPropertyHandle> Handle = WeakHandle.Pin())
+				{
+					HeaderRow.DragDropHandler(MakeShared<FInstancedObjectArrayStructDragDropHandler>(Handle.ToSharedRef(), HeaderRow.NameWidget.Widget, PropUtils));
+				}				
+			}));
+			Builder.AddCustomBuilder(InstanceBuilder);	
+		}));
+		ChildBuilder.AddCustomBuilder(ArrayBuilder);
 		return;
 	}
 	

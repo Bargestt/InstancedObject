@@ -69,6 +69,8 @@ void FInstancedObjectBuilder::GenerateHeaderRowContent(FDetailWidgetRow& HeaderR
 		.bAlwaysShowPropertyButtons(AlwaysShowPropertyButtons.Get(true))
 		.bDisplayDefaultPropertyButtons(DisplayDefaultPropertyButtons.Get(true))
 	];
+
+	OnHeaderRowGenerated.ExecuteIfBound(HeaderRow);
 }
 
 void FInstancedObjectBuilder::GenerateChildContent(IDetailChildrenBuilder& ChildBuilder)
