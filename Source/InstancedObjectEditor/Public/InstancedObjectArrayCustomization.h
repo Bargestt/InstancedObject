@@ -31,9 +31,10 @@ protected:
 	TSharedRef<ITableRow> OnGenerateWidgetForList(TSharedPtr<FListHandleEntry> InItem, const TSharedRef<STableViewBase>& OwnerTable);
 	void OnSelectionChanged(TSharedPtr<FListHandleEntry> Item, ESelectInfo::Type SelectInfo);
 
+	void RefreshEntries();
 protected:
 	TSharedPtr<IPropertyHandle> ArrayHandle;
-	
+	TArray<TSharedPtr<class FInstancedObjectBuilder>> ChildBuilders;
 	
 	TWeakPtr<IPropertyUtilities> PropertyUtilitiesWeak;
 

@@ -324,15 +324,25 @@ TSharedRef<SWidget> FInstancedObjectEditorUtils::CreateHeader_ChildrenEditors(co
 	for (uint32 Index = 0; Index < NumChildren; Index++)
 	{
 		TSharedRef<IPropertyHandle> ChildHandle = ObjectInstanceHandle->GetChildHandle(Index).ToSharedRef();
-		if (!CanDisplayChild(ChildHandle))
+		if (ChildHandle->IsCategoryHandle())
 		{
 			continue;
 		}
-
+		
 		if(!ChildHandle->HasMetaData(FInstancedObjectMeta::MD_Header))
 		{
 			continue;
-		}		
+		}
+	
+		const FProperty* Property = ChildHandle->GetProperty();
+		if (Property == nullptr ||
+			Property->HasAnyPropertyFlags(CPF_Protected) ||
+			ChildHandle->GetBoolMetaData(TEXT("BlueprintProtected")) ||
+			ChildHandle->GetBoolMetaData(TEXT("BlueprintPrivate")))
+		{
+			continue;
+		};
+				
 		
 		TMap<FName, FString> HeaderMetaData;
 		{

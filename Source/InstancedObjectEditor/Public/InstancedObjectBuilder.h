@@ -25,6 +25,10 @@ public:
 	virtual void GenerateChildContent(IDetailChildrenBuilder& ChildBuilder) override;
 	
 	virtual bool InitiallyCollapsed() const override { return false; }
+	virtual TSharedPtr<IPropertyHandle> GetPropertyHandle() const override
+	{
+		return StructHandle.IsValid() ? StructHandle : ObjectHandle;
+	}
 	virtual FName GetName() const override
 	{
 		static const FName Name("FInstancedObjectBuilder");
