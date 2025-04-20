@@ -271,27 +271,37 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 	const FString* AdvancedWidget = FInstancedObjectEditorUtils::FindMetaData(ArrayHandle, FInstancedObjectMeta::MD_AdvancedWidget);
 	if (!AdvancedWidget)
 	{
-		for(uint32 Index = 0; Index < ChildrenNum; Index++)
+		TSharedRef<FDetailArrayBuilder> ArrayBuilder = MakeShared<FDetailArrayBuilder>(ArrayHandle.ToSharedRef(), false, false, false);
+		ArrayBuilder->OnGenerateArrayElementWidget(FOnGenerateArrayElementWidget::CreateLambda([PropUtils = CustomizationUtils.GetPropertyUtilities()](TSharedRef<IPropertyHandle> Handle, int32 Index, IDetailChildrenBuilder& Builder)
 		{
-			if (TSharedPtr<IPropertyHandle> ChildProperty = ArrayHandle->GetChildHandle(Index))
+			TSharedRef<FInstancedObjectBuilder> InstanceBuilder = MakeShared<FInstancedObjectBuilder>(Handle, nullptr);
+			InstanceBuilder->DisplayDefaultPropertyButtons = false;
+			InstanceBuilder->OnHeaderGenerated(FInstancedObjectBuilder::FOnHeaderRowGenerated::CreateLambda([WeakHandle = Handle.ToWeakPtr(), PropUtils](FDetailWidgetRow& HeaderRow)
 			{
-				TSharedRef<FInstancedObjectBuilder> Builder = MakeShared<FInstancedObjectBuilder>(ChildProperty.ToSharedRef());
-				Builder->DisplayDefaultPropertyButtons = false;
-				ChildBuilder.AddCustomBuilder(Builder);	
-			}
-		}		
+				if (TSharedPtr<IPropertyHandle> Handle = WeakHandle.Pin())
+				{
+					HeaderRow.DragDropHandler(MakeShared<FInstancedObjectArrayStructDragDropHandler>(Handle.ToSharedRef(), HeaderRow.NameWidget.Widget, PropUtils));
+				}				
+			}));
+			Builder.AddCustomBuilder(InstanceBuilder);	
+		}));
+		ChildBuilder.AddCustomBuilder(ArrayBuilder);
 		return;
 	}
 	
 
-	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");	
+	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 
-	SelectionDetails = PropertyModule.FindDetailView(FName(PropertyHandle->GetPropertyPath()));
+	
+	uint32 OwnerId = GetTypeHash(ChildBuilder.GetParentCategory().GetParentLayout().GetDetailsView());
+	FName DetailsId = *FString::Printf(TEXT("%s:%d"), *FString(PropertyHandle->GetPropertyPath()), OwnerId);
+
+	SelectionDetails = PropertyModule.FindDetailView(DetailsId);
 	if (!SelectionDetails.IsValid())
 	{
 		FDetailsViewArgs Args;
 		{
-			Args.ViewIdentifier = FName(PropertyHandle->GetPropertyPath());
+			Args.ViewIdentifier = DetailsId;
 			Args.bAllowSearch = false;
 			Args.bShowOptions = false;
 			Args.bShowObjectLabel = false;
@@ -397,7 +407,13 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 					NewSelection.Add(ListEntries.Last());
 				}	
 			}
-		}		
+		}
+	
+		if (NewSelection.IsEmpty() && !ListEntries.IsEmpty() && PropertyHandle->HasMetaData(TEXT("ForceSelect")))
+		{
+			NewSelection.Add(ListEntries[0]);
+		}	
+
 		List->ClearSelection();
 		List->SetItemSelection(NewSelection, true, ESelectInfo::Direct);
 		if (NewSelection.IsEmpty())
@@ -534,10 +550,6 @@ public:
 		return STableRow::OnMouseButtonUp( MyGeometry, MouseEvent );
 	}
 
-	virtual FReply OnPreviewMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
-	{
-		return STableRow::OnMouseButtonDown(MyGeometry, MouseEvent);
-	}
 	
 private:
 	TSharedPtr<FEntryType> ListEntry;
