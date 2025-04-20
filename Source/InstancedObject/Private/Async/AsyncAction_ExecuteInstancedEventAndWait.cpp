@@ -49,7 +49,7 @@ void UAsyncAction_ExecuteInstancedEventAndWait::Activate()
 void UAsyncAction_ExecuteInstancedEventAndWait::SetReadyToDestroy()
 {
 	Super::SetReadyToDestroy();
-	if (InstancedEvent)
+	if (IsValid(InstancedEvent))
 	{
 		InstancedEvent->Cancel();
 		InstancedEvent->OnResultNative.RemoveAll(this);

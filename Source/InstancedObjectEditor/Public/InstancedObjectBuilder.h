@@ -34,8 +34,6 @@ public:
 		static const FName Name("FInstancedObjectBuilder");
 		return Name;
 	}
-
-	virtual TSharedPtr<IPropertyHandle> GetPropertyHandle() const override { return ObjectHandle; }
 	//~ End IDetailCustomNodeBuilder interface
 
 
