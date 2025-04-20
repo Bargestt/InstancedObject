@@ -65,7 +65,7 @@ void UInstancedEvent::Execute(const FInstancedEventContext& Context)
 
 void UInstancedEvent::Cancel()
 {
-	if (GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint) || !GetClass()->HasAnyClassFlags(CLASS_Native))
+	if (!HasAnyFlags(RF_BeginDestroyed) && !IsUnreachable() && GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint) || !GetClass()->HasAnyClassFlags(CLASS_Native))
 	{
 		BP_CancelEvent();
 	}
@@ -73,7 +73,7 @@ void UInstancedEvent::Cancel()
 
 void UInstancedEvent::ExecuteEvent(const FInstancedEventContext& Context)
 {
-	if (GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint) || !GetClass()->HasAnyClassFlags(CLASS_Native))
+	if (!HasAnyFlags(RF_BeginDestroyed) && !IsUnreachable() && GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint) || !GetClass()->HasAnyClassFlags(CLASS_Native))
 	{
 		BP_ExecuteEvent(Context);
 	}

@@ -36,7 +36,7 @@ FString UInstancedEvent_Switch::GetInstancedObjectTitle_Implementation(bool bFul
 		const FInstancedEvent_SwitchPair& Pair = Events[Index];
 		FString Condition = Pair.Condition.IsValid()	? TEXT("{") + GetTitleSafe(Pair.Condition.Get(), bFullTitle)	+ TEXT("}") : TEXT(": true");
 		FString Event =		Pair.Event.IsValid()		? TEXT("{") + GetTitleSafe(Pair.Event.Get(), bFullTitle)		+ TEXT("}")	: TEXT(": None");		
-		Lines.Add(FString::Printf(TEXT("<RichTextBlock.Bold>Case %d</>{Condtion% s\nEvent%s}"), Index, *Condition, *Event));
+		Lines.Add(FString::Printf(TEXT("<RichTextBlock.Bold>Case %d</>{Condtion%s\nEvent%s}"), Index, *Condition, *Event));
 	}			
 	return FString::Printf(TEXT("<RichTextBlock.Bold>Switch %s</>{%s}"), bStopOnFirstSuccess ? TEXT("Single") : TEXT("Multi"), *FString::Join(Lines, TEXT("\n")));
 }
