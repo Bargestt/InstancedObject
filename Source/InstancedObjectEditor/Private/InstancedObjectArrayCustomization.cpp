@@ -9,11 +9,19 @@
 #include "IDetailDragDropHandler.h"
 #include "InstancedObjectBuilder.h"
 #include "InstancedObjectEditorUtils.h"
+#include "InstancedObjectUtilityLibrary.h"
+#include "IPropertyRowGenerator.h"
 #include "IPropertyUtilities.h"
+#include "ISinglePropertyView.h"
+#include "IStructureDataProvider.h"
+#include "IStructureDetailsView.h"
 #include "PropertyCustomizationHelpers.h"
 #include "PropertyEditorClipboard.h"
+#include "PropertyRestriction.h"
 #include "SInstancedObjectHeader.h"
 #include "DragAndDrop/DecoratedDragDropOp.h"
+#include "Editor/PropertyEditor/Private/PropertyNode.h"
+#include "Widgets/Text/SRichTextBlock.h"
 
 #define LOCTEXT_NAMESPACE "FInstancedObjectEditor"
 
@@ -246,38 +254,49 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 	
 	uint32 ChildrenNum = 0;
     ArrayHandle->GetNumChildren(ChildrenNum);
-	if(ChildrenNum == 0)
-	{
-		return;
-	}
 	
     for(uint32 Index = 0; Index < ChildrenNum; Index++)
     {
     	if (TSharedPtr<IPropertyHandle> ChildProperty = ArrayHandle->GetChildHandle(Index))
     	{
     		FInstancedObjectEditorUtils::CreateClassRestrictions(ChildProperty.ToSharedRef(), PropertyHandle);
-    		FInstancedObjectEditorUtils::CreateInheritedClassRestrictions(ChildProperty.ToSharedRef(), PropertyHandle);
+    		if (PropertyHandle->HasMetaData(FInstancedObjectMeta::MD_InheritFilters))
+    		{
+    			FInstancedObjectEditorUtils::CreateInheritedClassRestrictions(ChildProperty.ToSharedRef(), PropertyHandle);
+    		}
     	}
     }
 	
 	const FString* AdvancedWidget = FInstancedObjectEditorUtils::FindMetaData(ArrayHandle, FInstancedObjectMeta::MD_AdvancedWidget);
 	if (!AdvancedWidget)
 	{
-		TSharedRef<FDetailArrayBuilder> ArrayBuilder = MakeShared<FDetailArrayBuilder>(ArrayHandle.ToSharedRef(), false, false, false);
-		ArrayBuilder->OnGenerateArrayElementWidget(FOnGenerateArrayElementWidget::CreateLambda([PropUtils = CustomizationUtils.GetPropertyUtilities()](TSharedRef<IPropertyHandle> Handle, int32 Index, IDetailChildrenBuilder& Builder)
+		for(uint32 Index = 0; Index < ChildrenNum; Index++)
 		{
-			TSharedRef<FInstancedObjectBuilder> InstanceBuilder = MakeShared<FInstancedObjectBuilder>(Handle, nullptr);
-			InstanceBuilder->DisplayDefaultPropertyButtons = false;
-			InstanceBuilder->OnHeaderGenerated(FInstancedObjectBuilder::FOnHeaderRowGenerated::CreateLambda([WeakHandle = Handle.ToWeakPtr(), PropUtils](FDetailWidgetRow& HeaderRow)
+			if (TSharedPtr<IPropertyHandle> ChildProperty = ArrayHandle->GetChildHandle(Index))
 			{
-				if (TSharedPtr<IPropertyHandle> Handle = WeakHandle.Pin())
-				{
-					HeaderRow.DragDropHandler(MakeShared<FInstancedObjectArrayStructDragDropHandler>(Handle.ToSharedRef(), HeaderRow.NameWidget.Widget, PropUtils));
-				}				
-			}));
-			Builder.AddCustomBuilder(InstanceBuilder);	
-		}));
-		ChildBuilder.AddCustomBuilder(ArrayBuilder);
+				IDetailPropertyRow& Row = ChildBuilder.AddProperty(ChildProperty.ToSharedRef());
+				
+				TSharedPtr<SWidget> NameWidget, ValueWidget;
+				Row.GetDefaultWidgets(NameWidget, ValueWidget, false);
+
+				TSharedRef<SInstancedObjectHeader> HeaderWidget =
+					SNew(SInstancedObjectHeader, ChildProperty)
+					.bDisplayDefaultPropertyButtons(false)
+					.bAlwaysShowPropertyButtons(false);
+				
+				Row.CustomWidget(true)
+				.NameContent()
+				[
+					NameWidget.ToSharedRef()
+				]
+				.ValueContent()
+				[
+					HeaderWidget
+				];
+				
+				HeaderWidget->GetHeaderExtensionPanel()->SetContent(FInstancedObjectEditorUtils::CreateHeader_ChildrenEditors(ChildProperty, ChildBuilder));		
+			}
+		}		
 		return;
 	}
 	
@@ -287,7 +306,7 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 	
 	uint32 OwnerId = GetTypeHash(ChildBuilder.GetParentCategory().GetParentLayout().GetDetailsView());
 	FName DetailsId = *FString::Printf(TEXT("%s:%d"), *FString(PropertyHandle->GetPropertyPath()), OwnerId);
-
+	
 	SelectionDetails = PropertyModule.FindDetailView(DetailsId);
 	if (!SelectionDetails.IsValid())
 	{
@@ -376,42 +395,22 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 
 	const TSharedPtr<IPropertyHandleArray> AsArray = ArrayHandle->AsArray();
 	if (AsArray.IsValid())
-	{
-		TArray<TWeakObjectPtr<UObject>> OldSelectedObjects = SelectionDetails->GetSelectedObjects();
-		TArray<TSharedPtr<FListHandleEntry>> NewSelection;
-		
-		uint32 NumItems = 0;
-		ListEntries.Empty(NumItems);
-		if (AsArray->GetNumElements(NumItems) == FPropertyAccess::Success)
+	{		
+		RefreshEntries();
+
+		List->RegisterActiveTimer(0.1, FWidgetActiveTimerDelegate::CreateLambda([this, CachedNum = ListEntries.Num(), WeakArray = ArrayHandle.ToWeakPtr()](double InCurrentTime, float InDeltaTime)
 		{
-			for (uint32 Index = 0; Index < NumItems; Index++)
+			if (TSharedPtr<IPropertyHandle> Handle = WeakArray.Pin())
 			{
-				TSharedRef<IPropertyHandle> ElementHandle = AsArray->GetElement(Index);
-				
-				FListHandleEntry* Entry = ListEntries.Add_GetRef(MakeShared<FListHandleEntry>()).Get();
-				Entry->Handle = ElementHandle;
-				Entry->DragDropHandler = MakeShared<FInstancedObjectArrayStructDragDropHandler>(ElementHandle, nullptr, CustomizationUtils.GetPropertyUtilities());
-
-
-				UObject* ObjectValue;
-				if (ElementHandle->GetValue(ObjectValue) == FPropertyAccess::Success && ObjectValue && OldSelectedObjects.Contains(ObjectValue))
+				uint32 CurrentNum = 0;
+				if (Handle->GetNumChildren(CurrentNum) == FPropertyAccess::Success && CurrentNum != CachedNum)
 				{
-					NewSelection.Add(ListEntries.Last());
-				}	
+					Handle->GetParentHandle()->RequestRebuildChildren();
+				}				
+				return EActiveTimerReturnType::Continue;
 			}
-		}
-	
-		if (NewSelection.IsEmpty() && !ListEntries.IsEmpty() && PropertyHandle->HasMetaData(TEXT("ForceSelect")))
-		{
-			NewSelection.Add(ListEntries[0]);
-		}	
-
-		List->ClearSelection();
-		List->SetItemSelection(NewSelection, true, ESelectInfo::Direct);
-		if (NewSelection.IsEmpty())
-		{
-			SelectionDetails->SetObject(nullptr);
-		}
+			return EActiveTimerReturnType::Stop;
+		}));
 	}
 }
 
@@ -542,6 +541,10 @@ public:
 		return STableRow::OnMouseButtonUp( MyGeometry, MouseEvent );
 	}
 
+//	virtual FReply OnPreviewMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+//	{
+//		return STableRow::OnMouseButtonDown(MyGeometry, MouseEvent);
+//	}
 	
 private:
 	TSharedPtr<FEntryType> ListEntry;
@@ -572,6 +575,50 @@ void FInstancedObjectArrayStructCustomization::OnSelectionChanged(TSharedPtr<FLi
 		}
 		
 		SelectionDetails->SetObjects(Objects);
+	}
+}
+
+void FInstancedObjectArrayStructCustomization::RefreshEntries()
+{
+	const TSharedPtr<IPropertyHandleArray> AsArray = ArrayHandle->AsArray();
+	if (AsArray.IsValid())
+	{
+		TArray<TWeakObjectPtr<UObject>> OldSelectedObjects = SelectionDetails->GetSelectedObjects();
+		TArray<TSharedPtr<FListHandleEntry>> NewSelection;
+		
+		uint32 NumItems = 0;
+		ListEntries.Empty(NumItems);
+		if (AsArray->GetNumElements(NumItems) == FPropertyAccess::Success)
+		{
+			for (uint32 Index = 0; Index < NumItems; Index++)
+			{
+				TSharedRef<IPropertyHandle> ElementHandle = AsArray->GetElement(Index);
+				
+				FListHandleEntry* Entry = ListEntries.Add_GetRef(MakeShared<FListHandleEntry>()).Get();
+				Entry->Handle = ElementHandle;
+				Entry->DragDropHandler = MakeShared<FInstancedObjectArrayStructDragDropHandler>(ElementHandle, nullptr, PropertyUtilitiesWeak);
+
+
+				UObject* ObjectValue;
+				if (ElementHandle->GetValue(ObjectValue) == FPropertyAccess::Success && ObjectValue && OldSelectedObjects.Contains(ObjectValue))
+				{
+					NewSelection.Add(ListEntries.Last());
+				}	
+			}
+		}
+
+		if (NewSelection.IsEmpty() && !ListEntries.IsEmpty() && ArrayHandle->GetParentHandle()->HasMetaData(TEXT("ForceSelect")))
+		{
+			NewSelection.Add(ListEntries[0]);
+		}
+
+		List->RequestListRefresh();
+		List->ClearSelection();
+		List->SetItemSelection(NewSelection, true, ESelectInfo::Direct);
+		if (NewSelection.IsEmpty())
+		{
+			SelectionDetails->SetObject(nullptr);
+		}
 	}
 }
 

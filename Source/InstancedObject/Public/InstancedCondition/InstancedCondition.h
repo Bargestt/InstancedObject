@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InstancedConditionInterface.h"
 #include "InstancedObjectInterface.h"
 #include "InstancedObjectStruct.h"
 #if ENGINE_MINOR_VERSION >= 5
@@ -64,7 +65,9 @@ public:
  * 
  */
 UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, DefaultToInstanced, HideCategories=(Hidden), CollapseCategories)
-class INSTANCEDOBJECT_API UInstancedCondition : public UObject, public IInstancedObjectInterface
+class INSTANCEDOBJECT_API UInstancedCondition : public UObject
+	, public IInstancedObjectInterface
+	, public IInstancedConditionInterface
 {
 	GENERATED_BODY()
 	
@@ -74,14 +77,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Condition", meta=(DisplayPriority=-100, EditCondition="IsClassDefaultObject", EditConditionHides))
 	bool bCanInvert = true;
 	
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Condition", meta=(DisplayPriority=-100, EditCondition="bCanInvert", EditConditionHides))
 	bool bInvert = false;
 	
-public:
+
 	virtual UWorld* GetWorld() const override;
 
 	UFUNCTION(BlueprintCallable, Category = "InstancedCondition")
-	bool Check(const FInstancedConditionContext& Context);
+	virtual bool Check(const FInstancedConditionContext& Context) override final;
 	
 	bool Check(const FInstancedConditionContext& Context, UWorld* WorldOverride);
 

@@ -4,38 +4,44 @@
 
 #include "CoreMinimal.h"
 #include "InstancedEvent.h"
-#include "InstancedEvent_Repeat.generated.h"
+#include "InstancedEvent_SwitchOnResult.generated.h"
 
-/**
- * Repeatedly execute event
- */
-UCLASS(NotBlueprintable, meta = (DisplayName = ".Repeat"))
-class INSTANCEDOBJECT_API UInstancedEvent_Repeat : public UInstancedEvent_Operator
+USTRUCT(BlueprintType)
+struct FInstancedEvent_SwitchOnResult_Entry
 {
 	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
-	FIntPoint NumExecutions = FIntPoint(1, -1);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
-	FVector2D DelayRange = FVector2D(1, -1);
-	
+	bool bExactTag = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
-	bool bRecalculateDelay = false;
+	bool bEndExecution = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
 	FInstancedEventStruct Event;
+};
+
+/**
+ * Execute event and switch on received results
+ */
+UCLASS(NotBlueprintable, meta = (DisplayName = ".Switch on Result"))
+class INSTANCEDOBJECT_API UInstancedEvent_SwitchOnResult : public UInstancedEvent_Operator
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
+	FInstancedEventStruct Event;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(ForceInlineRow))
+	TMap<FGameplayTag, FInstancedEvent_SwitchOnResult_Entry> Entries;
+	
 protected:
 	virtual void ExecuteEvent(const FInstancedEventContext& Context) override;
 	virtual void Cancel() override;
 	virtual void GetSubEvents_Implementation(TArray<UInstancedEvent*>& OutEvents) const override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
-	virtual void CreateTimer();
-	virtual void ExecuteContent();
+
+	virtual void OnResult(const FInstancedEventResult& Result);
 protected:
 	FInstancedEventContext CachedContext;
-	
-	TWeakObjectPtr<UWorld> TimerWorld;
-	FTimerHandle TimerHandle;		
-	int32 ExecutionsLeft = 0;
 };

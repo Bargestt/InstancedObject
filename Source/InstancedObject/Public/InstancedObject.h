@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InstancedObjectArrayStruct.h"
 #include "InstancedObjectInterface.h"
 #include "InstancedObjectStruct.h"
 #include "UObject/Object.h"
@@ -27,17 +26,6 @@ public:
 	virtual UObject* GetObject() const override { return Object; }
 	virtual void SetObject(UObject* NewObject) override { Object = NewObject; }
 };
-
-USTRUCT(BlueprintType, meta=(IndentSize=4))
-struct INSTANCEDOBJECT_API FInstancedObjectArrayStruct : public FInstancedObjectArrayStructBase
-{
-	GENERATED_BODY();
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category="Object", meta=(MustImplement="/Script/InstancedObject.InstancedObjectInterface"))
-	TArray<TObjectPtr<UObject>> Objects;
-};
-
-
 
 
 

@@ -39,7 +39,10 @@ void FInstancedObjectBuilder::GenerateHeaderRowContent(FDetailWidgetRow& HeaderR
 	}
 
 	FInstancedObjectEditorUtils::CreateClassRestrictions(ObjectHandle.ToSharedRef(), nullptr);
-	FInstancedObjectEditorUtils::CreateInheritedClassRestrictions(ObjectHandle.ToSharedRef(), StructHandle);
+	if (StructHandle->HasMetaData(FInstancedObjectMeta::MD_InheritFilters))
+	{
+		FInstancedObjectEditorUtils::CreateInheritedClassRestrictions(ObjectHandle.ToSharedRef(), StructHandle);
+	}	
 
 	FUIAction CopyAction, PasteAction;
 	ObjectHandle->CreateDefaultPropertyCopyPasteActions(CopyAction, PasteAction);	
@@ -69,8 +72,6 @@ void FInstancedObjectBuilder::GenerateHeaderRowContent(FDetailWidgetRow& HeaderR
 		.bAlwaysShowPropertyButtons(AlwaysShowPropertyButtons.Get(true))
 		.bDisplayDefaultPropertyButtons(DisplayDefaultPropertyButtons.Get(true))
 	];
-
-	OnHeaderRowGenerated.ExecuteIfBound(HeaderRow);
 }
 
 void FInstancedObjectBuilder::GenerateChildContent(IDetailChildrenBuilder& ChildBuilder)

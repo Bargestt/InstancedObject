@@ -35,20 +35,12 @@ public:
 		return Name;
 	}
 	//~ End IDetailCustomNodeBuilder interface
-
-
-	
-	DECLARE_DELEGATE_OneParam( FOnHeaderRowGenerated, FDetailWidgetRow& );
-	void OnHeaderGenerated( FOnHeaderRowGenerated InDelegate )
-	{
-		OnHeaderRowGenerated = InDelegate;
-	}
 private:
 	FSimpleDelegate OnRegenerateChildren;
-	FOnHeaderRowGenerated OnHeaderRowGenerated;
 
 	TSharedPtr<IPropertyHandle> StructHandle;
 	TSharedPtr<IPropertyHandle> ObjectHandle;
 
-	TSharedPtr<SInstancedObjectHeader> HeaderWidget;	
+	TSharedPtr<SInstancedObjectHeader> HeaderWidget;
+	
 };

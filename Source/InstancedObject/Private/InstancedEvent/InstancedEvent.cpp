@@ -4,6 +4,7 @@
 #include "InstancedEvent/InstancedEvent.h"
 
 #include "InstancedObjectModule.h"
+#include "Blueprint/BlueprintExceptionInfo.h"
 #include "Misc/DataValidation.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InstancedEvent)
@@ -91,6 +92,49 @@ void UInstancedEvent::BroadcastResult(const FGameplayTag& Type, const FInstanced
 	OnResult.Broadcast(Result);
 }
 
+TArray<UInstancedEvent*> UInstancedEvent_Operator::GetSubEvents(bool bRecursive) const
+{
+	TArray<UInstancedEvent*> Result;
+	GetSubEvents_Implementation(Result);
+	
+	if (bRecursive)
+	{
+		TArray<UInstancedEvent*> EventsToCheck = Result;
+		TSet<UInstancedEvent*> CheckedEvents;
+		while (!EventsToCheck.IsEmpty())
+		{
+			UInstancedEvent* Event = EventsToCheck[0];
+			EventsToCheck.RemoveAt(0);
+			
+			if (Event)
+			{
+				bool bAlreadyChecked = false;
+				CheckedEvents.Add(Event, &bAlreadyChecked);
+				if (!bAlreadyChecked)
+				{
+					CheckedEvents.Add(Event);
+				
+					if (const UInstancedEvent_Operator* Operator = Cast<UInstancedEvent_Operator>(Event))
+					{
+						TArray<UInstancedEvent*> Sub; 
+						Operator->GetSubEvents_Implementation(Sub);
+						EventsToCheck.Append(Sub);
+					}	
+				}							
+			}
+		}
+		
+		Result = CheckedEvents.Array();
+	}
+	else
+	{
+		// Easier to remove all here instead of hoping users will ensure no nullptr
+		Result.Remove(nullptr);
+	}
+
+	return Result;
+}
+
 /*--------------------------------------------
 	UInstancedEventBlueprintLibrary
  *--------------------------------------------*/
@@ -113,6 +157,59 @@ void UInstancedEventBlueprintLibrary::ExecuteInstancedEvent(UObject* WorldContex
 	{
 		Event.ExecuteEvent(Context);
 	}
+}
+
+void UInstancedEventBlueprintLibrary::CancelInstancedEvent(const FInstancedEventStruct& Event)
+{
+	if (Event.Object)
+	{
+		Event.Object->Cancel();
+	}
+}
+
+
+DEFINE_FUNCTION(UInstancedEventBlueprintLibrary::execGetResultData)
+{
+	P_GET_STRUCT_REF(FInstancedEventResult, Result);
+	P_GET_STRUCT_REF(FGameplayTag, Type);
+	P_GET_UBOOL(bExact)
+	
+	// Read wildcard Value input.
+	Stack.MostRecentPropertyAddress = nullptr;
+	Stack.MostRecentPropertyContainer = nullptr;
+	Stack.StepCompiledIn<FStructProperty>(nullptr);
+	
+	const FStructProperty* ValueProp = CastField<FStructProperty>(Stack.MostRecentProperty);
+	void* ValuePtr = Stack.MostRecentPropertyAddress;
+
+	P_FINISH;
+
+	bool bSuccess = false;
+
+	if (!ValueProp || !ValuePtr)
+	{
+		FBlueprintExceptionInfo ExceptionInfo(
+			EBlueprintExceptionType::AbortExecution,
+			NSLOCTEXT("InstancedObject", "InstancedEvent_GetInvalidValueWarning", "Failed to resolve the Value for GetResultData")
+		);
+
+		FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
+	}
+	else
+	{
+		P_NATIVE_BEGIN;
+		if (Result.Type == Type || (!bExact && Result.Type.MatchesTag(Type)))
+		{
+			if (Result.Data.IsValid() && Result.Data.GetScriptStruct()->IsChildOf(ValueProp->Struct))
+			{
+				ValueProp->Struct->CopyScriptStruct(ValuePtr, Result.Data.GetMemory());
+				bSuccess = true;
+			}
+		}		
+		P_NATIVE_END;
+	}
+
+	*static_cast<bool*>(RESULT_PARAM) = bSuccess;
 }
 
 

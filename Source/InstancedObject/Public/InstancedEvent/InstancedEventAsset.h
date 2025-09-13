@@ -16,7 +16,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category="InstancedEvent")
 	virtual UInstancedEvent* GetEvent() const { return nullptr; }
 
-	static UInstancedEvent* GetEventSafe(const UInstancedEventAssetBase* Asset) { return Asset ? Asset->GetEvent() : nullptr; }
+	
+	static UInstancedEvent* GetEvent(const UInstancedEventAssetBase* Asset) { return Asset ? Asset->GetEvent() : nullptr; }
+
+	template<typename T>
+	static T* GetEvent(const UInstancedEventAssetBase* Asset) { return Asset ? Cast<T>(Asset->GetEvent()) : nullptr; }
+
+	template<typename T>
+	static bool GetEvent(const UInstancedEventAssetBase* Asset, T*& OutEvent)
+	{
+		OutEvent = Asset ? Cast<T>(Asset->GetEvent()) : nullptr;
+		return OutEvent != nullptr;
+	}
 };
 
 /**

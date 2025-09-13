@@ -23,6 +23,14 @@ void UInstancedEvent_Switch::ExecuteEvent(const FInstancedEventContext& Context)
 	BroadcastResult(FInstancedEventTags::Get().Tag_EventEnd);
 }
 
+void UInstancedEvent_Switch::GetSubEvents_Implementation(TArray<UInstancedEvent*>& OutEvents) const
+{
+	for (auto& [Condition, Event] : Events)
+	{
+		OutEvents.Add(Event.Object);
+	}
+}
+
 FString UInstancedEvent_Switch::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
 {
 	if (!bFullTitle)

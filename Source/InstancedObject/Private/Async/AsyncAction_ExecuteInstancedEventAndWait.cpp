@@ -36,7 +36,7 @@ void UAsyncAction_ExecuteInstancedEventAndWait::Activate()
 		InstancedEvent->OnResultNative.AddUObject(this, &UAsyncAction_ExecuteInstancedEventAndWait::OnResult);
 		if (InstancedEventContext.WorldContextObject == nullptr)
 		{
-			InstancedEventContext.WorldContextObject = this;
+			InstancedEventContext.WorldContextObject = GetOuter();
 		}
 		InstancedEvent->Execute(InstancedEventContext);
 	}
@@ -47,14 +47,15 @@ void UAsyncAction_ExecuteInstancedEventAndWait::Activate()
 }
 
 void UAsyncAction_ExecuteInstancedEventAndWait::SetReadyToDestroy()
-{
-	Super::SetReadyToDestroy();
+{	
 	if (IsValid(InstancedEvent))
 	{
-		InstancedEvent->Cancel();
-		InstancedEvent->OnResultNative.RemoveAll(this);
-		InstancedEvent = nullptr;
+		InstancedEvent->OnResultNative.RemoveAll(this);	
+		InstancedEvent->Cancel();			
 	}
+	InstancedEvent = nullptr;
+	
+	Super::SetReadyToDestroy();
 }
 
 void UAsyncAction_ExecuteInstancedEventAndWait::Cancel()

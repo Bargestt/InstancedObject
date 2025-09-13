@@ -47,6 +47,11 @@ void UInstancedEvent_Repeat::Cancel()
 	Super::Cancel();
 }
 
+void UInstancedEvent_Repeat::GetSubEvents_Implementation(TArray<UInstancedEvent*>& OutEvents) const
+{
+	OutEvents.Add(Event.Object);
+}
+
 FString UInstancedEvent_Repeat::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
 {
 	FString NumRange;
@@ -118,7 +123,7 @@ void UInstancedEvent_Repeat::CreateTimer()
 		
 		if (Delay >= 0)
 		{
-			World->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::Execute, Delay, !bRecalculateDelay);
+			World->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::ExecuteContent, Delay, !bRecalculateDelay);
 		}
 	}
 	else
@@ -127,7 +132,7 @@ void UInstancedEvent_Repeat::CreateTimer()
 	}
 }
 
-void UInstancedEvent_Repeat::Execute()
+void UInstancedEvent_Repeat::ExecuteContent()
 {
 	bool bHasFinished = false;
 	if (ExecutionsLeft > 0)

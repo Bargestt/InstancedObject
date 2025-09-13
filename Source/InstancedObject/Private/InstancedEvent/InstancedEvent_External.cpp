@@ -35,6 +35,11 @@ void UInstancedEvent_External::Cancel()
 	Super::Cancel();
 }
 
+void UInstancedEvent_External::GetSubEvents_Implementation(TArray<UInstancedEvent*>& OutEvents) const
+{
+	// not owned
+}
+
 FString UInstancedEvent_External::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
 {
 	if (!bFullTitle)

@@ -30,7 +30,7 @@ void UInstancedEvent_Delay::ExecuteEvent(const FInstancedEventContext& Context)
 		{
 			TimerWorld = World;
 			CachedContext = Context;
-			World->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::Execute, Delay, false);
+			World->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::ExecuteContent, Delay, false);
 		}
 	}
 	else
@@ -47,6 +47,11 @@ void UInstancedEvent_Delay::Cancel()
 	}
 	TimerWorld.Reset();
 	Super::Cancel();
+}
+
+void UInstancedEvent_Delay::GetSubEvents_Implementation(TArray<UInstancedEvent*>& OutEvents) const
+{
+	OutEvents.Add(Event.Object);
 }
 
 FString UInstancedEvent_Delay::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
@@ -79,7 +84,7 @@ FString UInstancedEvent_Delay::GetInstancedObjectTitle_Implementation(bool bFull
 	return FString::Printf(TEXT("<RichTextBlock.Bold>Delay</>: %s\n<RichTextBlock.Bold>Event</>{%s}"), *Range, *GetTitleSafe(Event.Get(), bFullTitle));
 }
 
-void UInstancedEvent_Delay::Execute()
+void UInstancedEvent_Delay::ExecuteContent()
 {
 	TimerWorld.Reset();
 	TimerHandle.Invalidate();

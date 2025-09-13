@@ -4,32 +4,33 @@
 
 #include "CoreMinimal.h"
 #include "InstancedEvent.h"
-#include "InstancedEvent_Delay.generated.h"
+#include "InstancedEvent_Branch.generated.h"
 
 /**
- * Execute child event after delay
+ * Execute event and select branch on end
  */
-UCLASS(NotBlueprintable, meta = (DisplayName = ".Delay"))
-class INSTANCEDOBJECT_API UInstancedEvent_Delay : public UInstancedEvent_Operator
+UCLASS(NotBlueprintable, meta = (DisplayName = ".Branch"))
+class INSTANCEDOBJECT_API UInstancedEvent_Branch : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event")
-	FVector2D DelayRange = FVector2D(1, -1);
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
 	FInstancedEventStruct Event;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
+	FInstancedEventStruct OnSuccess;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
+	FInstancedEventStruct OnFail;
+	
 protected:
 	virtual void ExecuteEvent(const FInstancedEventContext& Context) override;
 	virtual void Cancel() override;
 	virtual void GetSubEvents_Implementation(TArray<UInstancedEvent*>& OutEvents) const override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
-	
-	virtual void ExecuteContent();
+
+	virtual void OnResult(const FInstancedEventResult& Result);
 protected:
+	UPROPERTY()
 	FInstancedEventContext CachedContext;
-	
-	TWeakObjectPtr<UWorld> TimerWorld;	
-	FTimerHandle TimerHandle;	
 };

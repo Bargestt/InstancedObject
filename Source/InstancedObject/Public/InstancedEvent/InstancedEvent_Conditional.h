@@ -19,9 +19,13 @@ public:
 	FInstancedConditionStruct Condition;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
-	FInstancedEventStruct Event;
+	FInstancedEventStruct OnTrue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
+	FInstancedEventStruct OnFalse;
 	
 protected:
 	virtual void ExecuteEvent(const FInstancedEventContext& Context) override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
+	virtual void GetSubEvents_Implementation(TArray<UInstancedEvent*>& OutEvents) const override;
 };

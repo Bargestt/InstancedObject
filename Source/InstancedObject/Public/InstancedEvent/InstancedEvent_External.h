@@ -26,6 +26,7 @@ protected:
 protected:
 	virtual void ExecuteEvent(const FInstancedEventContext& Context) override;
 	virtual void Cancel() override;
+	virtual void GetSubEvents_Implementation(TArray<UInstancedEvent*>& OutEvents) const override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
 
 	virtual void OnResult(const FInstancedEventResult& Result);

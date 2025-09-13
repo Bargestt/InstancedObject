@@ -2,6 +2,8 @@
 
 
 #include "InstancedEvent/InstancedEvent_Multi.h"
+#include "InstancedEvent/Executor/InstancedEventExecutor.h"
+#include "InstancedEvent/Executor/InstancedEventExecutor_Sequence.h"
 
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InstancedEvent_Multi)
@@ -22,6 +24,10 @@ void UInstancedEvent_Multi::ExecuteEvent(const FInstancedEventContext& Context)
 	FInstancedEventExecutor& Struct = Execution.GetMutable();
 	Struct.Reset();
 	Struct.Init(this);
+	if (!Struct.OnResult.IsBound())
+	{
+		Struct.OnResult.BindUObject(this, &UInstancedEvent_Multi::OnExecutorResult);
+	}	
 	Struct.Execute(Context);
 }
 
@@ -34,30 +40,27 @@ void UInstancedEvent_Multi::Cancel()
 	Super::Cancel();
 }
 
+void UInstancedEvent_Multi::GetSubEvents_Implementation(TArray<UInstancedEvent*>& OutEvents) const
+{
+	for (const FInstancedEventStruct& Event : Events)
+	{
+		OutEvents.Add(Event.Object);
+	}
+}
+
 FString UInstancedEvent_Multi::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
 {	
 	const FString DefaultValue = TEXT("None");
 
-	FString ExecutionStr;
-	if (Execution.IsValid())
-	{
-		ExecutionStr = Execution.Get().GetDisplayString(Execution.GetScriptStruct());
-		if (ExecutionStr.IsEmpty())
-		{
-#if WITH_EDITOR
-			ExecutionStr = Execution.GetScriptStruct()->GetDisplayNameText().ToString();			
-#else
-			ExecutionStr = Execution.GetScriptStruct()->GetName();
-#endif //
-		}
-	}
-	else
+	const UScriptStruct* ExecutorStruct = Execution.IsValid() ? Execution.GetScriptStruct() : FInstancedEventExecutor_Sequence::StaticStruct();	
+	FString ExecutionStr = Execution.Get().GetDisplayString(ExecutorStruct);	
+	if (ExecutionStr.IsEmpty())
 	{
 #if WITH_EDITOR
-		ExecutionStr = FInstancedEventExecutor_Sequence::StaticStruct()->GetDisplayNameText().ToString();			
+		ExecutionStr = ExecutorStruct->GetDisplayNameText().ToString();			
 #else
-		ExecutionStr = FInstancedEventExecutor_Sequence::StaticStruct()->GetName();
-#endif //
+		ExecutionStr = ExecutorStruct->GetName();
+#endif // WITH_EDITOR
 	}	
 	
 	if (!bFullTitle)
@@ -83,182 +86,10 @@ void UInstancedEvent_Multi::BeginDestroy()
 	}
 }
 
-void UInstancedEvent_Multi::End()
+void UInstancedEvent_Multi::OnExecutorResult(const FInstancedEventResult& Result)
 {
-	if (Execution.IsValid())
+	if (Result.IsEndEvent())
 	{
-		Execution.GetMutable().Reset();
-	}
-	BroadcastResult(FInstancedEventTags::Get().Tag_EventEnd);
-}
-
-
-
-void FInstancedEventExecutor_SequenceBase::Reset()
-{
-	for (UInstancedEvent* Event : WaitEvents)
-	{
-		if (Event)
-		{
-			Event->OnResultNative.RemoveAll(this);
-		}			
-	}
-	WaitEvents.Empty();
-}
-
-void FInstancedEventExecutor_SequenceBase::Execute(const FInstancedEventContext& Context)
-{
-	TArray<UInstancedEvent*> Events;
-	PreExecute(Context, Events);
-	
-	for (UInstancedEvent* Event : WaitEvents)
-	{
-		Event->OnResultNative.AddRaw(this, &FInstancedEventExecutor_SequenceBase::OnResult);	
-	}
-
-	const bool bEndExecution = Events.IsEmpty() || WaitEvents.IsEmpty();
-	
-	if (!Events.IsEmpty())
-	{
-		for (UInstancedEvent* Event : Events)
-		{
-			Event->Execute(Context);
-		}
-	}
-	
-	if(bEndExecution)
-	{
-		End();
-	}
-}
-
-void FInstancedEventExecutor_SequenceBase::OnResult(const FInstancedEventResult& Result)
-{
-	WaitEvents.Remove(Result.Event);
-	if (WaitEvents.IsEmpty())
-	{
-		End();	
-	}
-}
-
-
-
-void FInstancedEventExecutor_Sequence::PreExecute(const FInstancedEventContext& Context, TArray<UInstancedEvent*>& EventsToExecute)
-{
-	for (const FInstancedEventStruct& EventStruct : Owner->Events)
-	{
-		if (UInstancedEvent* Event = EventStruct.Object)
-		{
-			EventsToExecute.Add(Event);
-		}
-	}	
-}
-void FInstancedEventExecutor_SequenceWait::PreExecute(const FInstancedEventContext& Context, TArray<UInstancedEvent*>& EventsToExecute)
-{
-	FInstancedEventExecutor_Sequence::PreExecute(Context, EventsToExecute);
-	WaitEvents = EventsToExecute;
-}
-
-
-void FInstancedEventExecutor_Random::PreExecute(const FInstancedEventContext& Context, TArray<UInstancedEvent*>& EventsToExecute)
-{
-	int32 Num;
-	{
-		const int32 Min = FMath::Min(RandomRange.X, RandomRange.Y);
-		const int32 Max = FMath::Max(RandomRange.X, RandomRange.Y);		
-		if(Max < 0) // Both disabled
-		{
-			Num = Owner->Events.Num();
-		}
-		else if (Min >= 0) // Both enabled
-		{
-			Num = FMath::RandRange(Min, Max);
-		}
-		else // Min is disabled
-		{
-			Num = Max;
-		}
-	}
-
-	TArray<FInstancedEventStruct> Temp = Owner->Events;
-	while (!Temp.IsEmpty() && EventsToExecute.Num() < Num)
-	{
-		const int32 Index = FMath::RandRange(0, Temp.Num() - 1);		
-		if (UInstancedEvent* Event = Temp[Index].Object)
-		{
-			EventsToExecute.Add(Event);
-		}
-		Temp.RemoveAtSwap(Index);
-	}
-}
-
-FString FInstancedEventExecutor_Random::GetDisplayString(const UScriptStruct* ThisStruct) const
-{
-	FString Range;
-	const int32 Min = FMath::Min(RandomRange.X, RandomRange.Y);
-	const int32 Max = FMath::Max(RandomRange.X, RandomRange.Y);		
-	if(Max < 0)
-	{
-		Range = TEXT("All");		
-	}
-	else if (Min >= 0)
-	{
-		Range = FString::Printf(TEXT("[%d, %d]"), Min, Max);
-	}
-	else
-	{
-		Range = FString::Printf(TEXT("%d"), Max);
-	}
-	
-	return FString::Printf(TEXT("%s %s"), *FInstancedEventExecutor::GetDisplayString(ThisStruct), *Range);
-}
-
-void FInstancedEventExecutor_RandomWait::PreExecute(const FInstancedEventContext& Context, TArray<UInstancedEvent*>& EventsToExecute)
-{
-	FInstancedEventExecutor_Random::PreExecute(Context, EventsToExecute);
-	WaitEvents = EventsToExecute;
-}
-
-
-
-
-void FInstancedEventExecutor_OneByOne::Reset()
-{
-	EventsToExecute.Empty();
-}
-
-void FInstancedEventExecutor_OneByOne::Execute(const FInstancedEventContext& Context)
-{
-	for (const FInstancedEventStruct& EventStruct : Owner->Events)
-	{
-		if (UInstancedEvent* Event = EventStruct.Object)
-		{
-			EventsToExecute.Add(Event);
-		}
-	}
-	CachedContext = Context;
-	NextEvent();
-}
-
-void FInstancedEventExecutor_OneByOne::NextEvent()
-{
-	if(!EventsToExecute.IsEmpty())
-	{
-		CurrentEvent = EventsToExecute[0];
-		EventsToExecute.RemoveAt(0);
-
-		if (CurrentEvent)
-		{
-			CurrentEvent->OnResultNative.AddRaw(this, &FInstancedEventExecutor_OneByOne::OnResult);
-			CurrentEvent->Execute(CachedContext);
-		}
-		else
-		{
-			NextEvent();
-		}			
-	}
-	else
-	{
-		End();
+		BroadcastResult(Result.Type);
 	}
 }

@@ -22,9 +22,12 @@ public:
 	FOnEvent OnEvent;
 
 public:
-	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject", AutoCreateRefTerm="Context"))
+	UFUNCTION(BlueprintCallable, Category="InstancedEvent", meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject", AutoCreateRefTerm="Context"))
 	static UAsyncAction_ExecuteInstancedEventAndWait* ExecuteInstancedEventAndWait(UObject* WorldContextObject, const FInstancedEventStruct& Event, const FInstancedEventContext& Context, bool bOnce = true, bool bDuplicateEvent = false);
 
+	UFUNCTION(BlueprintCallable, Category="InstancedEvent")
+	UInstancedEvent* GetEvent() const { return InstancedEvent; }
+	
 protected:
 	virtual void Activate() override;
 	virtual void SetReadyToDestroy() override;

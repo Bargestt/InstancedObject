@@ -43,6 +43,11 @@ void UInstancedEvent_WaitCondition::Cancel()
 	Super::Cancel();
 }
 
+void UInstancedEvent_WaitCondition::GetSubEvents_Implementation(TArray<UInstancedEvent*>& OutEvents) const
+{
+	OutEvents.Add(Event.Object);
+}
+
 FString UInstancedEvent_WaitCondition::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
 {
 	if (!bFullTitle)
