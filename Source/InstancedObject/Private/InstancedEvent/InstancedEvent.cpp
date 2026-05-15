@@ -66,7 +66,7 @@ void UInstancedEvent::Execute(const FInstancedEventContext& Context)
 
 void UInstancedEvent::Cancel()
 {
-	if (!HasAnyFlags(RF_BeginDestroyed) && !IsUnreachable() && GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint) || !GetClass()->HasAnyClassFlags(CLASS_Native))
+	if (!HasAnyFlags(RF_BeginDestroyed) && !IsUnreachable() && (GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint) || !GetClass()->HasAnyClassFlags(CLASS_Native)))
 	{
 		BP_CancelEvent();
 	}
@@ -74,7 +74,7 @@ void UInstancedEvent::Cancel()
 
 void UInstancedEvent::ExecuteEvent(const FInstancedEventContext& Context)
 {
-	if (!HasAnyFlags(RF_BeginDestroyed) && !IsUnreachable() && GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint) || !GetClass()->HasAnyClassFlags(CLASS_Native))
+	if (!HasAnyFlags(RF_BeginDestroyed) && !IsUnreachable() && (GetClass()->HasAnyClassFlags(CLASS_CompiledFromBlueprint) || !GetClass()->HasAnyClassFlags(CLASS_Native)))
 	{
 		BP_ExecuteEvent(Context);
 	}
@@ -165,6 +165,26 @@ void UInstancedEventBlueprintLibrary::CancelInstancedEvent(const FInstancedEvent
 	{
 		Event.Object->Cancel();
 	}
+}
+
+TArray<UInstancedEvent*> UInstancedEventBlueprintLibrary::GetSubEvents(UInstancedEvent* Event, bool bIncludeSelf, bool bRecursiveAdd)
+{
+	TArray<UInstancedEvent*> Result;
+
+	if (Event)
+	{
+		if (bIncludeSelf)
+		{
+			Result.Add(Event);
+		}
+		
+		if (const UInstancedEvent_Operator* Operator = Cast<UInstancedEvent_Operator>(Event))
+		{			
+			Result.Append(Operator->GetSubEvents(bRecursiveAdd));
+		}
+	}	
+	
+	return Result;
 }
 
 

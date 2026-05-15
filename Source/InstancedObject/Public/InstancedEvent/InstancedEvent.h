@@ -237,6 +237,9 @@ public:
 	{
 		return (Event.Object && (!Class || Event.Object->IsA(Class))) ? Event.Object : nullptr;
 	}
+	
+	UFUNCTION(BlueprintCallable, Category = "InstancedEvent")
+	static TArray<UInstancedEvent*> GetSubEvents(UInstancedEvent* Event, bool bIncludeSelf, bool bRecursiveAdd);
 
 
 	UFUNCTION(BlueprintPure, Category = "InstancedEvent")

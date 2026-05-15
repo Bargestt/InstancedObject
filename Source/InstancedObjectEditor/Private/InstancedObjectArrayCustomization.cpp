@@ -25,6 +25,14 @@
 
 #define LOCTEXT_NAMESPACE "FInstancedObjectEditor"
 
+static TAutoConsoleVariable<bool> CVar_EnableObjectArrayCustomization(
+	TEXT("Editor.Customization.ObjectArray"),
+	true,
+	TEXT("Customization is enabled"),
+	ECVF_Default
+);
+
+
 class FInstancedObjectArrayStructDragDropOp : public FDecoratedDragDropOp
 {
 public:
@@ -219,6 +227,20 @@ void FInstancedObjectArrayStructCustomization::CustomizeHeader(TSharedRef<IPrope
 		return;
 	}
 
+	if (!CVar_EnableObjectArrayCustomization.GetValueOnAnyThread())
+	{
+		HeaderRow
+		.NameContent()
+		[
+			PropertyHandle->CreatePropertyNameWidget()
+		]
+		.ValueContent()
+		[
+			PropertyHandle->CreatePropertyValueWidget(true)
+		];
+		return;
+	}
+
 	HeaderRow.NameContent()
 	[
 		PropertyHandle->CreatePropertyNameWidget()
@@ -245,6 +267,12 @@ void FInstancedObjectArrayStructCustomization::CustomizeHeader(TSharedRef<IPrope
 
 void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> PropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils)
 {
+	if (!CVar_EnableObjectArrayCustomization.GetValueOnAnyThread())
+	{
+		ChildBuilder.AddProperty(ArrayHandle.ToSharedRef());
+		return;
+	}
+	
 	FSimpleDelegate RequestRebuild = FSimpleDelegate::CreateLambda([PropertyHandle]()
 	{
 		PropertyHandle->RequestRebuildChildren();
@@ -304,7 +332,7 @@ void FInstancedObjectArrayStructCustomization::CustomizeChildren(TSharedRef<IPro
 	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 
 	
-	uint32 OwnerId = GetTypeHash(ChildBuilder.GetParentCategory().GetParentLayout().GetDetailsView());
+	uint32 OwnerId = GetTypeHash(ChildBuilder.GetParentCategory().GetParentLayout().GetDetailsViewSharedPtr().Get());
 	FName DetailsId = *FString::Printf(TEXT("%s:%d"), *FString(PropertyHandle->GetPropertyPath()), OwnerId);
 	
 	SelectionDetails = PropertyModule.FindDetailView(DetailsId);

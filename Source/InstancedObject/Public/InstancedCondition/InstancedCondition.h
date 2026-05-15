@@ -88,6 +88,12 @@ public:
 	virtual bool Check(const FInstancedConditionContext& Context) override final;
 	
 	bool Check(const FInstancedConditionContext& Context, UWorld* WorldOverride);
+		
+
+	TArray<UInstancedCondition*> GetSubConditions(bool bRecursive = false) const;
+
+protected:
+	virtual void GetSubConditions_Implementation(TArray<UInstancedCondition*>& OutConditions) const { }
 
 protected:	
 	UFUNCTION(BlueprintNativeEvent)
@@ -128,6 +134,9 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "InstancedCondition", meta=(WorldContext="WorldContextObject", CallableWithoutWorldContext, AutoCreateRefTerm = "Context", AdvancedDisplay=2))
 	static bool CheckInstancedCondition(UObject* WorldContextObject, const FInstancedConditionStruct& Condition, const FInstancedConditionContext& Context, bool bDefaultValue = true);
+	
+	UFUNCTION(BlueprintCallable, Category = "InstancedCondition")
+	static TArray<UInstancedCondition*> GetSubConditions(UInstancedCondition* Condition, bool bIncludeSelf, bool bRecursiveAdd);
 };
 
 
@@ -177,6 +186,7 @@ public:
 
 	virtual bool CheckCondition_Implementation(const FInstancedConditionContext& Context) override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
+	virtual void GetSubConditions_Implementation(TArray<UInstancedCondition*>& OutConditions) const override;
 };
 
 /** External condition asset */
@@ -190,4 +200,5 @@ public:
 public:
 	virtual bool CheckCondition_Implementation(const FInstancedConditionContext& Context) override;
 	virtual FString GetInstancedObjectTitle_Implementation(bool bFullTitle) const override;
+	virtual void GetSubConditions_Implementation(TArray<UInstancedCondition*>& OutConditions) const override;
 };

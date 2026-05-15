@@ -65,6 +65,46 @@ bool UInstancedCondition::Check(const FInstancedConditionContext& Context, UWorl
 	return bResult;
 }
 
+TArray<UInstancedCondition*> UInstancedCondition::GetSubConditions(bool bRecursive) const
+{
+	TArray<UInstancedCondition*> Result;
+	GetSubConditions_Implementation(Result);
+	
+	if (bRecursive)
+	{
+		TArray<UInstancedCondition*> ConditionsToCheck = Result;
+		TSet<UInstancedCondition*> CheckedConditions;
+		while (!ConditionsToCheck.IsEmpty())
+		{
+			UInstancedCondition* Condition = ConditionsToCheck[0];
+			ConditionsToCheck.RemoveAt(0);
+			
+			if (Condition)
+			{
+				bool bAlreadyChecked = false;
+				CheckedConditions.Add(Condition, &bAlreadyChecked);
+				if (!bAlreadyChecked)
+				{
+					CheckedConditions.Add(Condition);
+				
+					TArray<UInstancedCondition*> Sub; 
+					Condition->GetSubConditions_Implementation(Sub);
+					ConditionsToCheck.Append(Sub);
+				}							
+			}
+		}
+		
+		Result = CheckedConditions.Array();
+	}
+	else
+	{
+		// Easier to remove all here instead of hoping users will ensure no nullptr
+		Result.Remove(nullptr);
+	}
+
+	return Result;
+}
+
 /*--------------------------------------------
 	UInstancedConditionBlueprintLibrary
  *--------------------------------------------*/
@@ -81,6 +121,22 @@ bool UInstancedConditionBlueprintLibrary::CheckInstancedCondition(UObject* World
 	return Condition.CheckCondition(Context, bDefaultValue);
 }
 
+TArray<UInstancedCondition*> UInstancedConditionBlueprintLibrary::GetSubConditions(UInstancedCondition* Condition, bool bIncludeSelf, bool bRecursiveAdd)
+{
+	TArray<UInstancedCondition*> Result;
+
+	if (Condition)
+	{
+		if (bIncludeSelf)
+		{
+			Result.Add(Condition);
+		}
+		
+		Result.Append(Condition->GetSubConditions(bRecursiveAdd));
+	}	
+	
+	return Result;
+}
 
 
 /*--------------------------------------------
@@ -112,7 +168,7 @@ bool UInstancedCondition_LogicOperator::CheckCondition_Implementation(const FIns
 		{
 			const bool bDefaultValue = true;
 			
-			for (const FInstancedConditionStruct Condition : Conditions)
+			for (const FInstancedConditionStruct& Condition : Conditions)
 			{
 				if (!Condition.CheckCondition(Context, bDefaultValue))
 				{
@@ -125,7 +181,7 @@ bool UInstancedCondition_LogicOperator::CheckCondition_Implementation(const FIns
 		{
 			const bool bDefaultValue = false;
 			
-			for (const FInstancedConditionStruct Condition : Conditions)
+			for (const FInstancedConditionStruct& Condition : Conditions)
 			{
 				if (Condition.CheckCondition(Context, bDefaultValue))
 				{
@@ -244,6 +300,14 @@ FString UInstancedCondition_LogicOperator::GetInstancedObjectTitle_Implementatio
 	return TEXT("");
 }
 
+void UInstancedCondition_LogicOperator::GetSubConditions_Implementation(TArray<UInstancedCondition*>& OutConditions) const
+{
+	for (auto& Condition : Conditions)
+	{
+		OutConditions.Add(Condition.Object);
+	}
+}
+
 
 bool UInstancedCondition_External::CheckCondition_Implementation(const FInstancedConditionContext& Context)
 {
@@ -253,6 +317,14 @@ bool UInstancedCondition_External::CheckCondition_Implementation(const FInstance
 FString UInstancedCondition_External::GetInstancedObjectTitle_Implementation(bool bFullTitle) const
 {
 	return Condition ? (bInvert ? TEXT("!") : TEXT("")) + GetTitleSafe(Condition->Condition.Object, bFullTitle) : TEXT("None(false)");
+}
+
+void UInstancedCondition_External::GetSubConditions_Implementation(TArray<UInstancedCondition*>& OutConditions) const
+{
+	if (Condition)
+	{
+		OutConditions.Add(Condition->Condition.Object);
+	}
 }
 
 

@@ -35,7 +35,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(EditCondition="bLimitNumber"))
 	FIntPoint LimitNumber = FIntPoint(1, -1);
 
-	int32 ExecutionsLeft;
+	int32 ExecutionsLeft = -1;
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
