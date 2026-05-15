@@ -24,7 +24,7 @@ struct FInstancedEvent_SwitchOnResult_Entry
 /**
  * Execute event and switch on received results
  */
-UCLASS(NotBlueprintable, meta = (DisplayName = ".Switch on Result"))
+UCLASS(NotBlueprintable, ClassGroup=(Operator), meta = (DisplayName = ".Switch on Result"))
 class INSTANCEDOBJECT_API UInstancedEvent_SwitchOnResult : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()

@@ -11,12 +11,12 @@ struct FInstancedEventExecutor;
 
 
 /** Execute multiple events */
-UCLASS(NotBlueprintable, meta = (DisplayName = ".Multi"))
+UCLASS(NotBlueprintable, ClassGroup=(Operator), meta = (DisplayName = ".Multi"))
 class INSTANCEDOBJECT_API UInstancedEvent_Multi : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", NoClear, meta=(ExcludebaseStruct, AllowedClasses="AllowedExecutors", DisallowedClasses="DisallowedExecutors"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", NoClear, meta=(ExcludebaseStruct, GetAllowedClasses="AllowedExecutors", GetDisallowedClasses="DisallowedExecutors"))
 	TInstancedStruct<FInstancedEventExecutor> Execution;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event", meta=(InheritFilters))
@@ -34,11 +34,11 @@ protected:
 	virtual void OnExecutorResult(const FInstancedEventResult& Result);
 
 
-#if WITH_EDITORONLY_DATA
-	UPROPERTY()
-	TArray<TObjectPtr<UScriptStruct>> AllowedExecutors;
+#if WITH_EDITOR
+	UFUNCTION()
+	virtual TArray<UScriptStruct*> GetAllowedExecutors() const { return {}; }
 
-	UPROPERTY()
-	TArray<TObjectPtr<UScriptStruct>> DisallowedExecutors;
+	UFUNCTION()
+	virtual TArray<UScriptStruct*> DisallowedExecutors() const { return {}; }
 #endif //
 };

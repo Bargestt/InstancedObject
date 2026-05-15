@@ -9,7 +9,7 @@
 /**
  * Execute event and select branch on end
  */
-UCLASS(NotBlueprintable, meta = (DisplayName = ".Branch"))
+UCLASS(NotBlueprintable, ClassGroup=(Operator), meta = (DisplayName = ".Branch"))
 class INSTANCEDOBJECT_API UInstancedEvent_Branch : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()

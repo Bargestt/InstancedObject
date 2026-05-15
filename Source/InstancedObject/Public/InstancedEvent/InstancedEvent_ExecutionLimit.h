@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS(NotBlueprintable, meta = (DisplayName = ".Execution Limit"))
+UCLASS(NotBlueprintable, ClassGroup=(Operator), meta = (DisplayName = ".Execution Limit"))
 class INSTANCEDOBJECT_API UInstancedEvent_ExecutionLimit : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()

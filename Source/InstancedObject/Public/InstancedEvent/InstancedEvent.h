@@ -201,7 +201,7 @@ public:
 	FInstancedEventResultSignature_Native OnResultNative;
 };
 
-UCLASS(Abstract, NotBlueprintable)
+UCLASS(Abstract, NotBlueprintable, ClassGroup=(Operator))
 class INSTANCEDOBJECT_API UInstancedEvent_Operator : public UInstancedEvent
 {
 	GENERATED_BODY()

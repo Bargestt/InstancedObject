@@ -9,7 +9,7 @@
 /**
  * Repeatedly execute event
  */
-UCLASS(NotBlueprintable, meta = (DisplayName = ".Repeat"))
+UCLASS(NotBlueprintable, ClassGroup=(Operator), meta = (DisplayName = ".Repeat"))
 class INSTANCEDOBJECT_API UInstancedEvent_Repeat : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()

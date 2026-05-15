@@ -9,7 +9,7 @@
 /**
  * Execute child event after delay
  */
-UCLASS(NotBlueprintable, meta = (DisplayName = ".Delay"))
+UCLASS(NotBlueprintable, ClassGroup=(Operator), meta = (DisplayName = ".Delay"))
 class INSTANCEDOBJECT_API UInstancedEvent_Delay : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()

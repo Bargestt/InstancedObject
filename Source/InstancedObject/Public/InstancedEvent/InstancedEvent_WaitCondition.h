@@ -10,7 +10,7 @@
 /**
  * Wait condition success to execute event and finish 
  */
-UCLASS(NotBlueprintable, meta = (DisplayName = ".Wait Condition"))
+UCLASS(NotBlueprintable, ClassGroup=(Operator), meta = (DisplayName = ".Wait Condition"))
 class INSTANCEDOBJECT_API UInstancedEvent_WaitCondition : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()

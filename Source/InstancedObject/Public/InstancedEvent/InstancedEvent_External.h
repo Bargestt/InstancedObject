@@ -9,7 +9,7 @@
 class UInstancedEventAssetBase;
 
 
-UCLASS(meta=(DisplayName=".External"))
+UCLASS(NotBlueprintable, ClassGroup=(Operator)meta=(DisplayName=".External"))
 class INSTANCEDOBJECT_API UInstancedEvent_External : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()

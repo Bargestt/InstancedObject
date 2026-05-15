@@ -10,7 +10,7 @@
 /**
  * Execute event if condition succeeds
  */
-UCLASS(NotBlueprintable, meta = (DisplayName = ".Conditional"))
+UCLASS(NotBlueprintable, ClassGroup=(Operator), meta = (DisplayName = ".Conditional"))
 class INSTANCEDOBJECT_API UInstancedEvent_Conditional : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()	

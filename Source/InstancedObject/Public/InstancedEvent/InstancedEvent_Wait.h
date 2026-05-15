@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS(meta=(DisplayName=".Wait"))
+UCLASS(NotBlueprintable, ClassGroup=(Operator), meta=(DisplayName=".Wait"))
 class INSTANCEDOBJECT_API UInstancedEvent_Wait : public UInstancedEvent_Operator
 {
 	GENERATED_BODY()
