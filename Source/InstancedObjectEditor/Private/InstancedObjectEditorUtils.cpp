@@ -8,6 +8,7 @@
 #include "InstancedObjectUtilityLibrary.h"
 #include "PropertyCustomizationHelpers.h"
 #include "PropertyRestriction.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "String/ParseTokens.h"
 
 #define LOCTEXT_NAMESPACE "FInstancedObjectEditor"
@@ -40,33 +41,120 @@ const FName FInstancedObjectMeta::MD_HideName = TEXT("HideName");
 class FInstancedObjectClassFilter : public IClassViewerFilter
 {
 public:
+	/** Whether abstract classes are allowed. */
+	bool bAllowAbstract = false;
+	
 	/** The meta class for the property that classes must be a child-of. */
 	const UClass* ClassPropertyMetaClass = nullptr;
 
 	/** The interface that must be implemented. */
 	const UClass* InterfaceThatMustBeImplemented = nullptr;
 
-	/** Whether or not abstract classes are allowed. */
-	bool bAllowAbstract = false;
-
 	/** Classes that can be picked */
 	TArray<const UClass*> AllowedClassFilters;
 
 	/** Classes that can't be picked */
 	TArray<const UClass*> DisallowedClassFilters;
+	
+	/** Limit using ClassGroup for Native and BlueprintCategory for Blueprint */
+	TArray<FName> AllowClassGroups;
+	
+	/** Limit using ClassGroup for Native and BlueprintCategory for Blueprint */
+	TArray<FName> DisallowClassGroups;
+	
+	virtual void Initialize()
+	{
+		if (!AllowClassGroups.IsEmpty() || !DisallowClassGroups.IsEmpty())
+		{
+			AssetRegistry = &FModuleManager::GetModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
+		}
+	}
+	
+	bool IsEmpty() const
+	{
+		return  InterfaceThatMustBeImplemented == nullptr &&
+				ClassPropertyMetaClass == UObject::StaticClass() &&
+				AllowedClassFilters.IsEmpty() &&
+				DisallowedClassFilters.IsEmpty() &&
+				AllowClassGroups.IsEmpty() &&
+				DisallowClassGroups.IsEmpty();
+	}
 
 	virtual bool IsClassAllowed(const FClassViewerInitializationOptions& InInitOptions, const UClass* InClass, TSharedRef< FClassViewerFilterFuncs > InFilterFuncs ) override
 	{
+		if (!AllowClassGroups.IsEmpty() || !DisallowClassGroups.IsEmpty())
+		{
+			if (InClass->HasAllClassFlags(CLASS_Native))
+			{
+				TArray<FName> ClassGroups;
+				{
+					TArray<FString> Temp;
+					InClass->GetClassGroupNames(Temp);				
+				
+					ClassGroups.Reserve(Temp.Num());
+					for (auto& Group : Temp)
+					{
+						ClassGroups.Add(*Group);
+					}
+					if (ClassGroups.IsEmpty())
+					{
+						ClassGroups.Add(NAME_None);
+					}
+				}				
+				
+				if (!AllowClassGroups.IsEmpty() && !ArrayIntersects(ClassGroups, AllowClassGroups))
+				{
+					return false;					
+				}
+			
+				if (!DisallowClassGroups.IsEmpty() && ArrayIntersects(ClassGroups, AllowClassGroups))
+				{
+					return false;
+				}
+			}
+			else if (const UBlueprint* Blueprint = Cast<UBlueprint>(InClass->ClassGeneratedBy))
+			{
+				const FName BPCategory = *Blueprint->BlueprintCategory;
+				if (!AllowClassGroups.IsEmpty() && !AllowClassGroups.Contains(BPCategory))
+				{
+					return false;
+				}
+			
+				if (!DisallowClassGroups.IsEmpty() && DisallowClassGroups.Contains(BPCategory))
+				{
+					return false;
+				}
+			}
+		}
 		return IsClassAllowedHelper(InClass);
 	}
 	
 	virtual bool IsUnloadedClassAllowed(const FClassViewerInitializationOptions& InInitOptions, const TSharedRef< const IUnloadedBlueprintData > InBlueprint, TSharedRef< FClassViewerFilterFuncs > InFilterFuncs) override
 	{
+		if (!AllowClassGroups.IsEmpty() || !DisallowClassGroups.IsEmpty())
+		{			
+			const FString GeneratedClassPathString = InBlueprint->GetClassPathName().ToString();
+			const FString BlueprintPath = GeneratedClassPathString.LeftChop(2); // Chop off _C
+			const FAssetData AssetData = AssetRegistry->GetAssetByObjectPath(FSoftObjectPath(BlueprintPath));
+			
+			FName BPCategory;
+			AssetData.GetTagValue(FBlueprintTags::BlueprintCategory, BPCategory);
+			if (!AllowClassGroups.IsEmpty() && !AllowClassGroups.Contains(BPCategory))
+			{
+				return false;
+			}
+			
+			if (!DisallowClassGroups.IsEmpty() && DisallowClassGroups.Contains(BPCategory))
+			{
+				return false;
+			}
+		}
 		return IsClassAllowedHelper(InBlueprint);
 	}
 
 private:
-
+	IAssetRegistry* AssetRegistry = nullptr;
+	
 	template <typename TClass>
 	bool IsClassAllowedHelper(TClass InClass)
 	{
@@ -88,6 +176,18 @@ private:
 			}
 		}
 
+		return false;
+	}
+	
+	static bool ArrayIntersects(const TArray<FName>& A, const TArray<FName>& B)
+	{
+		for (auto& Entry : A)
+		{
+			if (B.Contains(Entry))
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 };
@@ -139,16 +239,14 @@ const FString* FInstancedObjectEditorUtils::FindMetaData(const TSharedPtr<IPrope
 
 TSharedPtr<IClassViewerFilter> FInstancedObjectEditorUtils::CreateClassFilerFrom(const TSharedRef<IPropertyHandle>& SourceHandle)
 {
-	const UClass* ClassPropertyMetaClass = nullptr;
-	const UClass* InterfaceThatMustBeImplemented = nullptr;
-	TArray<const UClass*> AllowedClassFilters;
-	TArray<const UClass*> DisallowedClassFilters;		
-		
+	TSharedRef<FInstancedObjectClassFilter> ClassFilter = MakeShared<FInstancedObjectClassFilter>();
+	ClassFilter->bAllowAbstract = false;
+	
 	{
 		const FString* ClassName = FindMetaData(SourceHandle, FInstancedObjectMeta::MD_MustImplement);
 		if (ClassName && !ClassName->IsEmpty())
 		{
-			InterfaceThatMustBeImplemented = UClass::TryFindTypeSlow<UClass>(*ClassName);
+			ClassFilter->InterfaceThatMustBeImplemented = UClass::TryFindTypeSlow<UClass>(*ClassName);
 		}
 	}
 		
@@ -156,38 +254,50 @@ TSharedPtr<IClassViewerFilter> FInstancedObjectEditorUtils::CreateClassFilerFrom
 		const FString* ClassName = FindMetaData(SourceHandle, FInstancedObjectMeta::MD_BaseClass);
 		if (ClassName && !ClassName->IsEmpty())
 		{
-			ClassPropertyMetaClass = UClass::TryFindTypeSlow<UClass>(*ClassName);
+			ClassFilter->ClassPropertyMetaClass = UClass::TryFindTypeSlow<UClass>(*ClassName);
 		}		
 	}
 
-	if (!ClassPropertyMetaClass)
+	if (!ClassFilter->ClassPropertyMetaClass)
 	{
-		ClassPropertyMetaClass = UObject::StaticClass();
+		ClassFilter->ClassPropertyMetaClass = UObject::StaticClass();
 	}
 
 	if (const FString* Meta = FindMetaData(SourceHandle, TEXT("AllowedClasses")))
 	{
-		AllowedClassFilters = PropertyCustomizationHelpers::GetClassesFromMetadataString(*Meta);
+		ClassFilter->AllowedClassFilters = PropertyCustomizationHelpers::GetClassesFromMetadataString(*Meta);
 	}
 	if (const FString* Meta = FindMetaData(SourceHandle, TEXT("DisallowedClasses")))
 	{
-		DisallowedClassFilters = PropertyCustomizationHelpers::GetClassesFromMetadataString(*Meta);
+		ClassFilter->DisallowedClassFilters = PropertyCustomizationHelpers::GetClassesFromMetadataString(*Meta);
+	}
+	
+	if (const FString* Meta = FindMetaData(SourceHandle, TEXT("AllowClassGroups")))
+	{
+		TArray<FString> Groups;
+		Meta->ParseIntoArray(Groups, TEXT(","));
+		for (auto& Group : Groups)
+		{
+			ClassFilter->AllowClassGroups.Add(*Group);
+		}
+	}
+	
+	if (const FString* Meta = FindMetaData(SourceHandle, TEXT("DisallowClassGroups")))
+	{
+		TArray<FString> Groups;
+		Meta->ParseIntoArray(Groups, TEXT(","));
+		for (auto& Group : Groups)
+		{
+			ClassFilter->DisallowClassGroups.Add(*Group);
+		}
 	}
 
-	if (InterfaceThatMustBeImplemented == nullptr &&
-		ClassPropertyMetaClass == UObject::StaticClass() &&
-		AllowedClassFilters.IsEmpty() &&
-		DisallowedClassFilters.IsEmpty())
+	if (ClassFilter->IsEmpty())
 	{
 		return nullptr;
-	}
-
-	TSharedRef<FInstancedObjectClassFilter> ClassFilter = MakeShared<FInstancedObjectClassFilter>();		
-	ClassFilter->bAllowAbstract = false;
-	ClassFilter->InterfaceThatMustBeImplemented = InterfaceThatMustBeImplemented;
-	ClassFilter->ClassPropertyMetaClass = ClassPropertyMetaClass;
-	ClassFilter->AllowedClassFilters = AllowedClassFilters;
-	ClassFilter->DisallowedClassFilters = DisallowedClassFilters;
+	}	
+	
+	ClassFilter->Initialize();
 	return ClassFilter;
 }
 
